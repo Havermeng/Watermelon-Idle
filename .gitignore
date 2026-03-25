@@ -1,0 +1,43 @@
+# Unity
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+
+# Visual Studio / Rider
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vsconfig
+
+# IDE
+.idea/
+
+# Build results
+*.dll
+*.exe
+*.pdb
+
+# UPM packages
+Packages/
+
+# Generated files
+GeneratedAssets/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+Logs/
+
+# Continue sessions
+.continue/
+
+# Temp
+Temp/
