@@ -52,6 +52,7 @@ public class GameManager : MonoBehaviour
         else
             Debug.LogWarning("GameManager: coinText is null, cannot update UI");
         PlayerPrefs.SetInt("Coins", coins);
+        SaveManager.Instance?.MarkDirty();
     }
 
     public int GetCoins() { return coins; }
@@ -75,6 +76,7 @@ public class GameManager : MonoBehaviour
             else
                 Debug.LogWarning("GameManager: coinText is null, cannot update UI");
             PlayerPrefs.SetInt("Coins", coins);
+            SaveManager.Instance?.MarkDirty();
             return true;
         }
         return false;

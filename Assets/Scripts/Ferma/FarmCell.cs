@@ -5,7 +5,7 @@ using System.Collections;
 
 public class FarmCell : MonoBehaviour
 {
-    public Sprite emptySprite; // пустая грядка — одна для всех сортов
+    public Sprite emptySprite;
 
     [Header("Настройки")]
     public float growTime = 6f;
@@ -19,11 +19,28 @@ public class FarmCell : MonoBehaviour
     private Canvas cellCanvas;
     private int growthStage = 0;
     private float growTimer = 0f;
-    private WatermelonData activeWatermelonData; // сорт который посажен на этой грядке
+    private WatermelonData activeWatermelonData;
+
+    private ShopManager shopManager;
+    private GameManager gameManager;
+    private WatermelonUnlockManager unlockManager;
+
+    private float cachedGrowTime = -1f;
+    private float lastCacheTime = -1f;
+    private const float CACHE_DURATION = 0.5f;
+
+    private bool isGrowing => growthStage > 0 && growthStage < 3;
+
+    void Awake()
+    {
+        sr = GetComponent<SpriteRenderer>();
+        shopManager = ShopManager.Instance;
+        gameManager = GameManager.Instance;
+        unlockManager = WatermelonUnlockManager.Instance;
+    }
 
     void Start()
     {
-        sr = GetComponent<SpriteRenderer>();
         if (sr != null && emptySprite != null)
             sr.sprite = emptySprite;
 
@@ -45,106 +62,147 @@ public class FarmCell : MonoBehaviour
             }
         }
 
-        // Загружаем состояние
+        LoadState();
+        UpdateSprite();
+        if (isGrowing)
+            SetBarVisible(true);
+
+        enabled = isGrowing;
+    }
+
+    void LoadState()
+    {
         growthStage = PlayerPrefs.GetInt("Cell_" + cellIndex + "_Stage", 0);
         growTimer = PlayerPrefs.GetFloat("Cell_" + cellIndex + "_Timer", 0f);
         int watermelonIndex = PlayerPrefs.GetInt("Cell_" + cellIndex + "_WatermelonIndex", -1);
-        
-        // Восстанавливаем сорт если грядка не пустая
-        if (growthStage > 0 && watermelonIndex >= 0 && WatermelonUnlockManager.Instance != null)
+
+        if (growthStage > 0 && watermelonIndex >= 0 && unlockManager != null)
         {
-            // Пытаемся получить сорт по сохраненному индексу
-            if (watermelonIndex >= 0 && watermelonIndex < WatermelonUnlockManager.Instance.watermelons.Length)
-            {
-                activeWatermelonData = WatermelonUnlockManager.Instance.watermelons[watermelonIndex];
-            }
+            if (watermelonIndex >= 0 && watermelonIndex < unlockManager.watermelons.Length)
+                activeWatermelonData = unlockManager.watermelons[watermelonIndex];
             else
-            {
-                // Если индекс невалидный, используем текущий разблокированный
-                activeWatermelonData = WatermelonUnlockManager.Instance.GetCurrent();
-            }
+                activeWatermelonData = unlockManager.GetCurrent();
         }
-        
-        UpdateSprite();
-        if (growthStage > 0 && growthStage < 3)
-            SetBarVisible(true);
     }
 
     void Update()
     {
-        if (growthStage > 0 && growthStage < 3)
+        if (!isGrowing)
         {
-            growTimer += Time.deltaTime;
+            enabled = false;
+            return;
+        }
 
-            if (progressSlider != null)
-                progressSlider.value = growTimer / GetCurrentGrowTime();
+        growTimer += Time.deltaTime;
 
-            if (growTimer >= GetCurrentGrowTime())
+        if (progressSlider != null)
+            progressSlider.value = growTimer / GetCachedGrowTime();
+
+        if (growTimer >= GetCachedGrowTime())
+        {
+            growTimer = 0f;
+            growthStage++;
+            UpdateSprite();
+            SaveCell();
+
+            if (growthStage == 3)
             {
-                growTimer = 0f;
-                growthStage++;
-                UpdateSprite();
-                SaveCell();
-
-                if (growthStage == 3)
-                    SetBarVisible(false);
+                SetBarVisible(false);
+                enabled = false;
             }
         }
     }
 
+    float GetCachedGrowTime()
+    {
+        if (Time.time - lastCacheTime > CACHE_DURATION || cachedGrowTime < 0)
+        {
+            cachedGrowTime = CalculateGrowTime();
+            lastCacheTime = Time.time;
+        }
+        return cachedGrowTime;
+    }
+
+    float CalculateGrowTime()
+    {
+        float baseTime = activeWatermelonData != null ? activeWatermelonData.growTime : growTime;
+        float multiplier = shopManager != null ? shopManager.GetGrowTime() / shopManager.GetBaseGrowTime() : 1f;
+        return baseTime * multiplier;
+    }
+
     void OnMouseDown()
     {
-        // Блокируем клики если пауза или магазин открыт
         if (Time.timeScale == 0f) return;
         if (ShopUI.isShopOpen) return;
 
         if (growthStage == 0)
         {
-            // Проверяем что менеджер готов
-            if (WatermelonUnlockManager.Instance == null) return;
-            
-            activeWatermelonData = WatermelonUnlockManager.Instance.GetCurrent();
-            
-            // Дополнительная проверка
-            if (activeWatermelonData == null) return;
-            
-            growthStage = ShopManager.Instance != null
-                ? ShopManager.Instance.GetStartStage()
-                : 1;
-            growTimer = 0f;
-            if (progressSlider != null)
-                progressSlider.value = 0f;
-            SetBarVisible(growthStage < 3);
-            UpdateSprite();
-            SaveCell();
-            AudioManager.Instance?.PlayPlantSound();
+            Plant();
         }
         else if (growthStage == 3)
         {
-            int harvestValue = GetCurrentHarvestValue();
-            if (GameManager.Instance != null)
-                GameManager.Instance.AddCoins(harvestValue);
-            ShowHarvestText(harvestValue);
-            
-            // Частицы!
-            HarvestEffect.Instance?.Play(transform.position);
-            
-            AudioManager.Instance?.PlayWatermelonHarvestSound();
-            
-            growthStage = 0;
-            growTimer = 0f;
-            activeWatermelonData = null; // сбрасываем сорт после сбора
-            UpdateSprite();
-            SaveCell();
+            Harvest();
         }
+    }
+
+    void Plant()
+    {
+        if (unlockManager == null) return;
+
+        activeWatermelonData = unlockManager.GetCurrent();
+        if (activeWatermelonData == null) return;
+
+        int startStage = shopManager != null ? shopManager.GetStartStage() : 1;
+
+        growthStage = startStage;
+        growTimer = 0f;
+
+        if (progressSlider != null)
+            progressSlider.value = 0f;
+
+        SetBarVisible(startStage < 3);
+        UpdateSprite();
+        SaveCell();
+        AudioManager.Instance?.PlayPlantSound();
+
+        cachedGrowTime = -1f;
+        enabled = isGrowing;
+    }
+
+    void Harvest()
+    {
+        int harvestValue = GetCurrentHarvestValue();
+        gameManager?.AddCoins(harvestValue);
+        HarvestTextPool.Instance?.Show(cellCanvas.transform, harvestValue);
+        HarvestEffect.Instance?.Play(transform.position);
+        AudioManager.Instance?.PlayWatermelonHarvestSound();
+
+        growthStage = 0;
+        growTimer = 0f;
+        activeWatermelonData = null;
+        UpdateSprite();
+        SaveCell();
+        cachedGrowTime = -1f;
+    }
+
+    int GetCurrentHarvestValue()
+    {
+        int baseValue = activeWatermelonData != null ? activeWatermelonData.harvestValue : 10;
+        int bonus = shopManager?.GetFertilizerBonus() ?? 0;
+        float crit = shopManager?.GetCritChance() ?? 0f;
+        int total = baseValue + bonus;
+        return Random.value < crit ? total * 2 : total;
     }
 
     void UpdateSprite()
     {
         if (sr == null) return;
+
         switch (growthStage)
         {
-            case 0: sr.sprite = emptySprite; break;
+            case 0:
+                sr.sprite = emptySprite;
+                break;
             case 1:
                 if (activeWatermelonData != null) sr.sprite = activeWatermelonData.seedSprite;
                 break;
@@ -163,49 +221,14 @@ public class FarmCell : MonoBehaviour
             growthBarRoot.SetActive(visible);
     }
 
-    float GetCurrentGrowTime()
-    {
-        // Базовое время из сорта арбуза
-        float baseTime = activeWatermelonData != null
-            ? activeWatermelonData.growTime
-            : growTime;
-
-        // Множитель из магазина (отношение улучшенного времени к базовому)
-        float shopMultiplier = ShopManager.Instance != null
-            ? ShopManager.Instance.GetGrowTime() / ShopManager.Instance.GetBaseGrowTime()
-            : 1f;
-
-        return baseTime * shopMultiplier;
-    }
-
-    int GetCurrentHarvestValue()
-    {
-        // Базовый доход из сорта арбуза
-        int baseValue = activeWatermelonData != null
-            ? activeWatermelonData.harvestValue
-            : 10;
-
-        int bonus = ShopManager.Instance != null
-            ? ShopManager.Instance.GetFertilizerBonus()
-            : 0;
-
-        float crit = ShopManager.Instance != null
-            ? ShopManager.Instance.GetCritChance()
-            : 0f;
-
-        bool isCrit = Random.value < crit;
-        int total = baseValue + bonus;
-        return isCrit ? total * 2 : total;
-    }
-
     void SaveCell()
     {
         PlayerPrefs.SetInt("Cell_" + cellIndex + "_Stage", growthStage);
         PlayerPrefs.SetFloat("Cell_" + cellIndex + "_Timer", growTimer);
-        // Сохраняем индекс сорта
-        if (activeWatermelonData != null && WatermelonUnlockManager.Instance != null)
+
+        if (activeWatermelonData != null && unlockManager != null)
         {
-            int index = System.Array.IndexOf(WatermelonUnlockManager.Instance.watermelons, activeWatermelonData);
+            int index = System.Array.IndexOf(unlockManager.watermelons, activeWatermelonData);
             PlayerPrefs.SetInt("Cell_" + cellIndex + "_WatermelonIndex", index);
         }
         else
@@ -221,18 +244,17 @@ public class FarmCell : MonoBehaviour
             stage = growthStage,
             timer = growTimer
         };
-        
-        // Сохраняем индекс сорта если он есть
-        if (activeWatermelonData != null && WatermelonUnlockManager.Instance != null)
+
+        if (activeWatermelonData != null && unlockManager != null)
         {
-            int index = System.Array.IndexOf(WatermelonUnlockManager.Instance.watermelons, activeWatermelonData);
+            int index = System.Array.IndexOf(unlockManager.watermelons, activeWatermelonData);
             data.watermelonIndex = index;
         }
         else
         {
             data.watermelonIndex = -1;
         }
-        
+
         return data;
     }
 
@@ -240,71 +262,23 @@ public class FarmCell : MonoBehaviour
     {
         growthStage = data.stage;
         growTimer = data.timer;
-        
-        // Восстанавливаем сорт если грядка не пустая
-        if (growthStage > 0 && WatermelonUnlockManager.Instance != null)
+
+        if (growthStage > 0 && unlockManager != null)
         {
-            // Используем индекс из данных сохранения
             int watermelonIndex = data.watermelonIndex;
-            if (watermelonIndex >= 0 && watermelonIndex < WatermelonUnlockManager.Instance.watermelons.Length)
-            {
-                activeWatermelonData = WatermelonUnlockManager.Instance.watermelons[watermelonIndex];
-            }
+            if (watermelonIndex >= 0 && watermelonIndex < unlockManager.watermelons.Length)
+                activeWatermelonData = unlockManager.watermelons[watermelonIndex];
             else
-            {
-                // Если индекс невалидный, используем текущий разблокированный
-                activeWatermelonData = WatermelonUnlockManager.Instance.GetCurrent();
-            }
+                activeWatermelonData = unlockManager.GetCurrent();
         }
         else
         {
             activeWatermelonData = null;
         }
-        
+
         UpdateSprite();
-        if (growthStage > 0 && growthStage < 3)
-            SetBarVisible(true);
-        else
-            SetBarVisible(false);
-    }
-
-    private void ShowHarvestText(int amount)
-    {
-        if (cellCanvas == null) return;
-        GameObject go = new GameObject("FloatingHarvestText");
-        go.transform.SetParent(cellCanvas.transform, false);
-        RectTransform rt = go.AddComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0.5f, 0.5f);
-        rt.anchorMax = new Vector2(0.5f, 0.5f);
-        rt.pivot = new Vector2(0.5f, 0.5f);
-        rt.anchoredPosition = Vector2.zero;
-        TextMeshProUGUI tmp = go.AddComponent<TextMeshProUGUI>();
-        tmp.text = "+" + amount;
-        tmp.fontSize = 96;
-        tmp.color = Color.green;
-        tmp.alignment = TextAlignmentOptions.Center;
-        CanvasGroup cg = go.AddComponent<CanvasGroup>();
-        cg.alpha = 1f;
-        StartCoroutine(AnimateHarvestText(go));
-    }
-
-    private IEnumerator AnimateHarvestText(GameObject obj)
-    {
-        CanvasGroup cg = obj.GetComponent<CanvasGroup>();
-        if (cg == null) cg = obj.AddComponent<CanvasGroup>();
-        cg.alpha = 1f;
-        RectTransform rt = obj.GetComponent<RectTransform>();
-        Vector3 startPos = rt.anchoredPosition;
-        Vector3 endPos = startPos + new Vector3(0f, 100f, 0f);
-        float elapsed = 0f;
-        while (elapsed < 1f)
-        {
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed);
-            rt.anchoredPosition = Vector3.Lerp(startPos, endPos, t);
-            cg.alpha = 1f - t;
-            yield return null;
-        }
-        Destroy(obj);
+        SetBarVisible(isGrowing);
+        cachedGrowTime = -1f;
+        enabled = isGrowing;
     }
 }
