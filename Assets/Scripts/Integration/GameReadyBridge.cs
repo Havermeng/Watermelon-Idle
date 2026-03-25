@@ -1,80 +1,53 @@
 using UnityEngine;
 
-public static class GameReadyBridge
+public class GameReadyBridge : MonoBehaviour
 {
-    private static bool initialized = false;
+    private static bool called = false;
 
-    public static void Initialize()
+    void Start()
     {
-        if (initialized) return;
-        initialized = true;
+        if (called) return;
+        called = true;
         
 #if UNITY_WEBGL && !UNITY_EDITOR
         TryInvokeGameReady();
 #endif
-    }
-
-    public static void GameReady()
-    {
-        Initialize();
         
-#if UNITY_WEBGL && !UNITY_EDITOR
-        TryInvokeGameReady();
-#endif
+        Debug.Log("GameReadyBridge initialized");
     }
 
-    private static void TryInvokeGameReady()
+    void TryInvokeGameReady()
     {
         try
         {
             var yaGamesType = System.Type.GetType("YaGames.YaGames, YaGames");
             if (yaGamesType != null)
             {
-                var gameReadyMethod = yaGamesType.GetMethod("GameReady");
-                gameReadyMethod?.Invoke(null, null);
-                Debug.Log("GameReady API called successfully");
-                return;
-            }
-
-            var gameReadyEngineType = System.Type.GetType("YandexGamesSdk.YandexGamesSDK, YandexGamesSdk");
-            if (gameReadyEngineType != null)
-            {
-                var gameReadyMethod = gameReadyEngineType.GetMethod("GameReady");
-                gameReadyMethod?.Invoke(null, null);
-                Debug.Log("GameReady API called successfully (YandexGamesSdk)");
-                return;
-            }
-
-            var ysType = System.Type.GetType("YandexSDK, YandexSDK");
-            if (ysType != null)
-            {
-                var method = ysType.GetMethod("GameReady");
+                var method = yaGamesType.GetMethod("GameReady");
                 method?.Invoke(null, null);
-                Debug.Log("GameReady API called successfully (YandexSDK)");
+                Debug.Log("GameReady API called (YaGames)");
                 return;
             }
 
-            Debug.Log("GameReady API not found - this is normal if not running on Yandex Games");
+            var sdkType = System.Type.GetType("YandexGamesSdk.YandexGamesSDK, YandexGamesSdk");
+            if (sdkType != null)
+            {
+                var method = sdkType.GetMethod("GameReady");
+                method?.Invoke(null, null);
+                Debug.Log("GameReady API called (YandexGamesSdk)");
+                return;
+            }
+
+            Debug.Log("GameReady API not found - normal for non-Yandex platform");
         }
         catch (System.Exception e)
         {
-            Debug.Log("GameReady API call failed: " + e.Message);
+            Debug.Log("GameReady API error: " + e.Message);
         }
     }
 
-    public static void GameStarted()
+    public static void ResetState()
     {
-#if UNITY_WEBGL && !UNITY_EDITOR
-        try
-        {
-            var yaGamesType = System.Type.GetType("YaGames.YaGames, YaGames");
-            if (yaGamesType != null)
-            {
-                var method = yaGamesType.GetMethod("GameStarted");
-                method?.Invoke(null, null);
-            }
-        }
-        catch { }
-#endif
+        called = false;
     }
 }

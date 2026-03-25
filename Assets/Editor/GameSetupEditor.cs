@@ -56,6 +56,7 @@ public class GameSetupEditor : EditorWindow
         SetupLocalizationOnTexts();
         SetupHarvestTextPool();
         SetupSceneLoader();
+        SetupGameReadyBridge();
 
         Debug.Log("ArbuzFerma scene setup complete!");
     }
@@ -219,13 +220,24 @@ public class GameSetupEditor : EditorWindow
 
     static void AddGameReadyToScenes()
     {
-        GameManager[] managers = FindObjectsOfType<GameManager>(true);
+        SetupGameReadyBridge();
+        Debug.Log("GameReady integration check complete!");
+    }
 
-        foreach (GameManager gm in managers)
+    static void SetupGameReadyBridge()
+    {
+        GameReadyBridge[] bridges = FindObjectsOfType<GameReadyBridge>(true);
+
+        if (bridges.Length > 0)
         {
-            Debug.Log($"GameReady already integrated in {gm.gameObject.scene.name}");
+            Debug.Log("GameReadyBridge already exists");
+            return;
         }
 
-        Debug.Log("GameReady integration check complete!");
+        GameObject bridgeObj = new GameObject("GameReadyBridge");
+        bridgeObj.AddComponent<GameReadyBridge>();
+        DontDestroyOnLoad(bridgeObj);
+
+        Debug.Log("Created GameReadyBridge");
     }
 }

@@ -131,6 +131,7 @@
   <Project Path="Unity.RenderPipelines.Universal.Shaders.csproj" />
   <Project Path="Unity.RenderPipelines.Core.Runtime.Shared.csproj" />
   <Project Path="Unity.InternalAPIEngineBridge.004.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="Unity.2D.Sprite.AIIntegration.Editor.csproj" />
   <Project Path="Unity.InferenceEngine.MacBLAS.csproj" />
   <Project Path="Unity.AppUI.InternalAPIBridge.csproj" />
@@ -139,7 +140,6 @@
   <Project Path="Unity.InferenceEngine.ONNX.Editor.csproj" />
   <Project Path="glTFast.dots.csproj" />
   <Project Path="Unity.VisualScripting.DocCodeExamples.csproj" />
-  <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="Unity.InferenceEngine.iOSBLAS.csproj" />
   <Project Path="Unity.PlasticSCM.Editor.Entities.csproj" />
   <Project Path="Unity.Rendering.LightTransport.Editor.csproj" />

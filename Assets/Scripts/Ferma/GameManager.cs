@@ -25,8 +25,6 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        GameReadyBridge.Initialize();
-        
         if (SaveManager.Instance == null)
         {
             coins = 0;
@@ -42,8 +40,6 @@ public class GameManager : MonoBehaviour
             coins = 0;
             if (coinText != null) coinText.text = "0";
         }
-        
-        GameReadyBridge.GameReady();
     }
 
     public void AddCoins(int amount)
