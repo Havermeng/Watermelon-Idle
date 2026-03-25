@@ -53,8 +53,6 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\Menu\SettingsUI.cs" />
     <Compile Include="Assets\Scripts\Ferma\CoinIconFollow.cs" />
-    <Compile Include="Assets\Scripts\Menu\MenuButtonBinder.cs" />
-    <Compile Include="Assets\Scripts\Menu\WebGLAspectFix.cs" />
     <Compile Include="Assets\Scripts\Menu\ResetSaveButton.cs" />
     <Compile Include="Assets\Scripts\Ferma\HarvestEffect.cs" />
     <Compile Include="Assets\Scripts\Language\LocalizationManager.cs" />
@@ -63,8 +61,8 @@
     <Compile Include="Assets\Scripts\Menu\SaveManager.cs" />
     <Compile Include="Assets\Scripts\Audio\ButtonSoundAutoWire.cs" />
     <Compile Include="Assets\Scripts\VersionSystem\GameVersion.cs" />
-    <Compile Include="Assets\Scripts\Menu\WebGLTitleHider.cs" />
     <Compile Include="Assets\Scripts\Ferma\WatermelonData.cs" />
+    <Compile Include="Assets\Scripts\Menu\WebGLManager.cs" />
     <Compile Include="Assets\Scripts\Ferma\ShopUI.cs" />
     <Compile Include="Assets\Scripts\Ferma\GameManager.cs" />
     <Compile Include="Assets\Scripts\VersionSystem\VersionButton.cs" />
@@ -78,14 +76,11 @@
     <Compile Include="Assets\Scripts\Ferma\ShopManager.cs" />
     <Compile Include="Assets\Scripts\Audio\SceneMusicStarter.cs" />
     <Compile Include="Assets\Scripts\VersionSystem\VersionManager.cs" />
-    <Compile Include="Assets\Scripts\Clicker\ClickManager.cs" />
-    <Compile Include="Assets\Scripts\Menu\BackgroundCanvasFixer.cs" />
+    <Compile Include="Assets\Scripts\Core\Singleton.cs" />
     <Compile Include="Assets\Scripts\Menu\MenuManager.cs" />
     <Compile Include="Assets\Scripts\VersionSystem\VersionNotifier.cs" />
-    <Compile Include="Assets\Scripts\Menu\WebGLCanvasScaler.cs" />
     <Compile Include="Assets\Scripts\Ferma\ShopButton.cs" />
     <Compile Include="Assets\Scripts\Menu\SaveSlotsUI.cs" />
-    <Compile Include="Assets\Scripts\Menu\WebGLUIOptimizer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
