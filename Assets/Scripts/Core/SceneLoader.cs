@@ -8,7 +8,7 @@ public class SceneLoader : Singleton<SceneLoader>
 {
     [Header("Loading Screen")]
     [SerializeField] private GameObject loadingScreen;
-    [SerializeField] private Image progressBar;
+    [SerializeField] private Slider progressSlider;
     [SerializeField] private TextMeshProUGUI progressText;
     [SerializeField] private float minLoadingTime = 0.5f;
 
@@ -36,7 +36,7 @@ public class SceneLoader : Singleton<SceneLoader>
         if (loadingScreen != null)
         {
             loadingScreen.SetActive(true);
-            if (progressBar != null) progressBar.fillAmount = 0f;
+            if (progressSlider != null) progressSlider.value = 0f;
             if (progressText != null) progressText.text = "0%";
         }
 
@@ -50,7 +50,7 @@ public class SceneLoader : Singleton<SceneLoader>
         {
             progress = Mathf.Clamp01(currentOperation.progress / 0.9f);
 
-            if (progressBar != null) progressBar.fillAmount = progress;
+            if (progressSlider != null) progressSlider.value = progress;
             if (progressText != null) progressText.text = Mathf.RoundToInt(progress * 100) + "%";
 
             if (progress >= 1f)
@@ -71,7 +71,7 @@ public class SceneLoader : Singleton<SceneLoader>
         if (loadingScreen != null)
         {
             loadingScreen.SetActive(true);
-            if (progressBar != null) progressBar.fillAmount = 0f;
+            if (progressSlider != null) progressSlider.value = 0f;
             if (progressText != null) progressText.text = "0%";
         }
 
@@ -85,7 +85,7 @@ public class SceneLoader : Singleton<SceneLoader>
         {
             progress = Mathf.Clamp01(currentOperation.progress / 0.9f);
 
-            if (progressBar != null) progressBar.fillAmount = progress;
+            if (progressSlider != null) progressSlider.value = progress;
             if (progressText != null) progressText.text = Mathf.RoundToInt(progress * 100) + "%";
 
             if (progress >= 1f)

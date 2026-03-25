@@ -52,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\Menu\SettingsUI.cs" />
+    <Compile Include="Assets\Scripts\Core\SceneLoader.cs" />
     <Compile Include="Assets\Scripts\Ferma\CoinIconFollow.cs" />
     <Compile Include="Assets\Scripts\Menu\ResetSaveButton.cs" />
     <Compile Include="Assets\Scripts\Ferma\HarvestEffect.cs" />
@@ -75,6 +76,7 @@
     <Compile Include="Assets\Scripts\Audio\AudioManager.cs" />
     <Compile Include="Assets\Scripts\Ferma\ShopManager.cs" />
     <Compile Include="Assets\Scripts\Audio\SceneMusicStarter.cs" />
+    <Compile Include="Assets\Scripts\Ferma\HarvestTextPool.cs" />
     <Compile Include="Assets\Scripts\VersionSystem\VersionManager.cs" />
     <Compile Include="Assets\Scripts\Core\Singleton.cs" />
     <Compile Include="Assets\Scripts\Menu\MenuManager.cs" />

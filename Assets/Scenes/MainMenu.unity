@@ -988,6 +988,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaveManager
   selectedSlot: 0
+  autoSaveInterval: 30
 --- !u!4 &276623085
 Transform:
   m_ObjectHideFlags: 0
@@ -2104,7 +2105,6 @@ RectTransform:
   - {fileID: 651606905}
   - {fileID: 1393590324}
   - {fileID: 1151427016}
-  - {fileID: 1512639632}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -5628,54 +5628,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15a7a898dc7ced14189e6ba3a1d8b106, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
---- !u!1 &1512639630
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1512639632}
-  - component: {fileID: 1512639631}
-  m_Layer: 0
-  m_Name: VersionUIManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1512639631
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1512639630}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 58022eaccec3cb44d829c82b2cad22f7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::VersionUIManager
-  createUIAutomatically: 1
-  showVersionButton: 1
-  versionButtonPosition: {x: 100, y: 50}
-  versionPanelSize: {x: 600, y: 500}
---- !u!4 &1512639632
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1512639630}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -106.226685, y: -55.268707, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 651606899}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1531229275
 GameObject:
   m_ObjectHideFlags: 0
