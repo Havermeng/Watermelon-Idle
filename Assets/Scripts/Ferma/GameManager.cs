@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -25,10 +26,10 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        // Проверяем наличие SaveManager - если его нет, игра продолжает работать без сохранений
+        GameReadyBridge.Initialize();
+        
         if (SaveManager.Instance == null)
         {
-            Debug.LogWarning("SaveManager.Instance is null. Save system is disabled. Starting with 0 coins.");
             coins = 0;
             if (coinText != null) coinText.text = "0";
             return;
@@ -42,6 +43,8 @@ public class GameManager : MonoBehaviour
             coins = 0;
             if (coinText != null) coinText.text = "0";
         }
+        
+        GameReadyBridge.GameReady();
     }
 
     public void AddCoins(int amount)

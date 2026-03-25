@@ -87,7 +87,16 @@ public class LocalizationManager : MonoBehaviour
             { "tooltip_all_unlocked", "Все арбузы разблокированы!" },
             { "tooltip_watermelon_unlock", "Разблокировать {0}\nСтоимость: {1} монет\nХар-ка: {2}" },
             { "tooltip_max_upgrade", "Достигнут максимальный уровень" },
-            { "tooltip_not_enough_coins", "Недостаточно монет" }
+            { "tooltip_not_enough_coins", "Недостаточно монет" },
+            { "slot_empty", "Пусто" },
+            { "confirm", "ПОДТВЕРДИТЬ" },
+            { "cancel", "ОТМЕНА" },
+            { "paused", "ПАУЗА" },
+            { "resume", "ПРОДОЛЖИТЬ" },
+            { "main_menu", "ГЛАВНОЕ МЕНЮ" },
+            { "versions", "ВЕРСИИ" },
+            { "loading", "ЗАГРУЗКА..." },
+            { "coins_label", "Монеты" }
         };
 
         // Английские переводы
@@ -138,7 +147,16 @@ public class LocalizationManager : MonoBehaviour
             { "tooltip_all_unlocked", "All watermelons unlocked!" },
             { "tooltip_watermelon_unlock", "Unlock {0}\nCost: {1} coins\nHarvest: {2}" },
             { "tooltip_max_upgrade", "Max level reached" },
-            { "tooltip_not_enough_coins", "Not enough coins" }
+            { "tooltip_not_enough_coins", "Not enough coins" },
+            { "slot_empty", "Empty" },
+            { "confirm", "CONFIRM" },
+            { "cancel", "CANCEL" },
+            { "paused", "PAUSED" },
+            { "resume", "RESUME" },
+            { "main_menu", "MAIN MENU" },
+            { "versions", "VERSIONS" },
+            { "loading", "LOADING..." },
+            { "coins_label", "Coins" }
         };
     }
 
