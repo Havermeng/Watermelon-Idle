@@ -15,9 +15,6 @@ public class GameManager : MonoBehaviour
             return;
         }
         Instance = this;
-        
-        // Инициализируем AudioManager для WebGL
-        AudioManager.EnsureExists();
     }
 
     void OnDestroy()

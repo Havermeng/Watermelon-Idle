@@ -165,7 +165,7 @@ public class ShopManager : MonoBehaviour
         {
             growSpeedLevel++;
             PlayerPrefs.SetInt("GrowSpeedLevel", growSpeedLevel);
-            AudioManager.Instance?.PlaySFX(AudioManager.Instance.upgradeSound);
+            AudioManager.Instance?.PlayUpgradeSound();
             return true;
         }
         return false;
@@ -184,7 +184,7 @@ public class ShopManager : MonoBehaviour
         {
             harvestValueLevel++;
             PlayerPrefs.SetInt("HarvestValueLevel", harvestValueLevel);
-            AudioManager.Instance?.PlaySFX(AudioManager.Instance.upgradeSound);
+            AudioManager.Instance?.PlayUpgradeSound();
             return true;
         }
         return false;
@@ -203,7 +203,7 @@ public class ShopManager : MonoBehaviour
         {
             critChanceLevel++;
             PlayerPrefs.SetInt("CritChanceLevel", critChanceLevel);
-            AudioManager.Instance?.PlaySFX(AudioManager.Instance.upgradeSound);
+            AudioManager.Instance?.PlayUpgradeSound();
             return true;
         }
         return false;
@@ -222,7 +222,7 @@ public class ShopManager : MonoBehaviour
         {
             fertilizerLevel++;
             PlayerPrefs.SetInt("FertilizerLevel", fertilizerLevel);
-            AudioManager.Instance?.PlaySFX(AudioManager.Instance.upgradeSound);
+            AudioManager.Instance?.PlayUpgradeSound();
             return true;
         }
         return false;
@@ -241,7 +241,7 @@ public class ShopManager : MonoBehaviour
         {
             superSeedLevel++;
             PlayerPrefs.SetInt("SuperSeedLevel", superSeedLevel);
-            AudioManager.Instance?.PlaySFX(AudioManager.Instance.upgradeSound);
+            AudioManager.Instance?.PlayUpgradeSound();
             return true;
         }
         return false;

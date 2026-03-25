@@ -36,11 +36,23 @@ public class ResetSaveButton : MonoBehaviour
         
         // Сбрасываем разблокированные сорта
         PlayerPrefs.DeleteKey("UnlockedWatermelons");
+        
+        // Сбрасываем уровни улучшений
+        PlayerPrefs.DeleteKey("GrowSpeedLevel");
+        PlayerPrefs.DeleteKey("HarvestValueLevel");
+        PlayerPrefs.DeleteKey("CritChanceLevel");
+        PlayerPrefs.DeleteKey("FertilizerLevel");
+        PlayerPrefs.DeleteKey("SuperSeedLevel");
+        PlayerPrefs.DeleteKey("Coins");
+        
         PlayerPrefs.Save();
         
         // Сбрасываем в памяти
         if (WatermelonUnlockManager.Instance != null)
             WatermelonUnlockManager.Instance.ResetUnlocks();
+        
+        if (ShopManager.Instance != null)
+            ShopManager.Instance.SetLevels(0, 0, 0, 0, 0);
         
         saveSlotsUI.RefreshUI();
         RefreshVisibility();

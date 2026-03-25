@@ -1,9 +1,7 @@
 using UnityEngine;
 
-public class AudioManager : MonoBehaviour
+public class AudioManager : Singleton<AudioManager>
 {
-    public static AudioManager Instance;
-
     [Header("Источники звука")]
     public AudioSource musicSource;
     public AudioSource sfxSource;
@@ -19,31 +17,22 @@ public class AudioManager : MonoBehaviour
     public AudioClip buttonSound;
     public AudioClip watermelonHarvestSound;
 
-    void Awake()
+    protected override void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
+        base.Awake();
 
-            // Если AudioSource не назначены в Inspector — создаём сами
-            if (musicSource == null)
-                musicSource = gameObject.AddComponent<AudioSource>();
-            if (sfxSource == null)
-                sfxSource = gameObject.AddComponent<AudioSource>();
+        if (musicSource == null)
+            musicSource = gameObject.AddComponent<AudioSource>();
+        if (sfxSource == null)
+            sfxSource = gameObject.AddComponent<AudioSource>();
 
-            LoadVolume();
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
+        musicSource.loop = true;
+        musicSource.playOnAwake = false;
+        sfxSource.loop = false;
+        sfxSource.playOnAwake = false;
+        sfxSource.spatialBlend = 0f;
 
-    void OnDestroy()
-    {
-        if (Instance == this)
-            Instance = null;
+        LoadVolume();
     }
 
     public static void EnsureExists()
@@ -123,5 +112,17 @@ public class AudioManager : MonoBehaviour
     {
         if (watermelonHarvestSound == null) return;
         PlaySFX(watermelonHarvestSound);
+    }
+
+    public void PlayUpgradeSound()
+    {
+        if (upgradeSound == null) return;
+        PlaySFX(upgradeSound);
+    }
+
+    public void PlayPlantSound()
+    {
+        if (plantSound == null) return;
+        PlaySFX(plantSound);
     }
 }

@@ -7,8 +7,6 @@ public class SceneMusicStarter : MonoBehaviour
 
     void Start()
     {
-        AudioManager.EnsureExists(); // создаёт AudioManager если нет
-        
         if (AudioManager.Instance == null) return;
 
         if (musicType == SceneMusic.Menu)

@@ -117,7 +117,7 @@ public class FarmCell : MonoBehaviour
             SetBarVisible(growthStage < 3);
             UpdateSprite();
             SaveCell();
-            AudioManager.Instance?.PlaySFX(AudioManager.Instance.plantSound);
+            AudioManager.Instance?.PlayPlantSound();
         }
         else if (growthStage == 3)
         {
@@ -129,8 +129,6 @@ public class FarmCell : MonoBehaviour
             // Частицы!
             HarvestEffect.Instance?.Play(transform.position);
             
-            // Гарантируем существование AudioManager (важно для WebGL)
-            AudioManager.EnsureExists();
             AudioManager.Instance?.PlayWatermelonHarvestSound();
             
             growthStage = 0;

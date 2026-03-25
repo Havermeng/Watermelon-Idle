@@ -49,7 +49,39 @@ public class ShopUI : MonoBehaviour
         }
         
         InitializeUI();
+        CacheUIElements();
         if (shopPanel != null) shopPanel.SetActive(false);
+    }
+
+    void CacheUIElements()
+    {
+        if (shopPanel != null)
+        {
+            Image panelImage = shopPanel.GetComponent<Image>();
+            if (panelImage != null)
+                panelImage.raycastTarget = true;
+        }
+
+        Transform[] allChildren = shopPanel != null 
+            ? shopPanel.GetComponentsInChildren<Transform>(true)
+            : GetComponentsInChildren<Transform>(true);
+
+        foreach (Transform child in allChildren)
+        {
+            string name = child.name;
+            if (growSpeedText == null && name.Contains("GrowSpeed") && name.Contains("Text"))
+                growSpeedText = child.GetComponent<TextMeshProUGUI>();
+            else if (harvestValueText == null && name.Contains("HarvestValue") && name.Contains("Text"))
+                harvestValueText = child.GetComponent<TextMeshProUGUI>();
+            else if (critChanceText == null && name.Contains("CritChance") && name.Contains("Text"))
+                critChanceText = child.GetComponent<TextMeshProUGUI>();
+            else if (fertilizerText == null && name.Contains("Fertilizer") && name.Contains("Text"))
+                fertilizerText = child.GetComponent<TextMeshProUGUI>();
+            else if (superSeedText == null && name.Contains("SuperSeed") && name.Contains("Text"))
+                superSeedText = child.GetComponent<TextMeshProUGUI>();
+            else if (watermelonUnlockText == null && name.Contains("WatermelonUnlock") && name.Contains("Text"))
+                watermelonUnlockText = child.GetComponent<TextMeshProUGUI>();
+        }
     }
 
     void InitializeUI()
@@ -232,52 +264,7 @@ public class ShopUI : MonoBehaviour
         Instance.shopPanel != null &&
         Instance.shopPanel.activeSelf;
 
-    void FindUIElements()
-    {
-        if (shopPanel != null)
-        {
-            Image panelImage = shopPanel.GetComponent<Image>();
-            if (panelImage != null)
-                panelImage.raycastTarget = true;
-        }
 
-        // Кэшируем через TryGetComponent - более эффективно чем GameObject.Find
-        if (growSpeedText == null)
-        {
-            GameObject growBtn = GameObject.Find("GrowSpeedText");
-            if (growBtn != null) growSpeedText = growBtn.GetComponent<TextMeshProUGUI>();
-        }
-
-        if (harvestValueText == null)
-        {
-            GameObject harvestBtn = GameObject.Find("HarvestValueText");
-            if (harvestBtn != null) harvestValueText = harvestBtn.GetComponent<TextMeshProUGUI>();
-        }
-
-        if (critChanceText == null)
-        {
-            GameObject critBtn = GameObject.Find("CritChanceText");
-            if (critBtn != null) critChanceText = critBtn.GetComponent<TextMeshProUGUI>();
-        }
-
-        if (fertilizerText == null)
-        {
-            GameObject fertBtn = GameObject.Find("FertilizerText");
-            if (fertBtn != null) fertilizerText = fertBtn.GetComponent<TextMeshProUGUI>();
-        }
-
-        if (superSeedText == null)
-        {
-            GameObject seedBtn = GameObject.Find("SuperSeedText");
-            if (seedBtn != null) superSeedText = seedBtn.GetComponent<TextMeshProUGUI>();
-        }
-
-        if (watermelonUnlockText == null)
-        {
-            GameObject unlockBtn = GameObject.Find("WatermelonUnlockText");
-            if (unlockBtn != null) watermelonUnlockText = unlockBtn.GetComponent<TextMeshProUGUI>();
-        }
-    }
 
     void SetupButtons()
     {
@@ -500,7 +487,6 @@ public class ShopUI : MonoBehaviour
     {
         yield return null;
         
-        FindUIElements();
         SetupButtons();
         
         if (openShopButton != null)
