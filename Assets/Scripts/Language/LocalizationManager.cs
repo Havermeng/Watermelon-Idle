@@ -13,6 +13,10 @@ public class LocalizationManager : MonoBehaviour
 
     public event System.Action OnLanguageChanged;
 
+    private static Dictionary<string, string> staticRussian = new Dictionary<string, string>();
+    private static Dictionary<string, string> staticEnglish = new Dictionary<string, string>();
+    private static bool staticInitialized = false;
+
     void Awake()
     {
         if (Instance == null)
@@ -26,13 +30,7 @@ public class LocalizationManager : MonoBehaviour
             return;
         }
 
-        russianTranslations = new Dictionary<string, string>();
-        englishTranslations = new Dictionary<string, string>();
-        LoadTranslations();
-    }
-
-    void Start()
-    {
+        LoadAllTranslations();
         InitializeLanguage();
     }
 
@@ -118,6 +116,9 @@ public class LocalizationManager : MonoBehaviour
             russianTranslations[key] = russian;
         if (!string.IsNullOrEmpty(english))
             englishTranslations[key] = english;
+
+        staticRussian[key] = russian;
+        staticEnglish[key] = english;
     }
 
     public bool HasKey(string key)
@@ -129,26 +130,39 @@ public class LocalizationManager : MonoBehaviour
     public List<string> GetAllKeys()
     {
         var keys = new List<string>();
-        if (russianTranslations != null)
+        
+        if (!staticInitialized)
         {
-            keys.AddRange(russianTranslations.Keys);
+            LoadAllTranslations();
         }
+        
+        keys.AddRange(staticRussian.Keys);
         keys.Sort();
         return keys;
     }
 
     public string GetRussian(string key)
     {
-        if (russianTranslations != null && russianTranslations.ContainsKey(key))
-            return russianTranslations[key];
-        return "";
+        if (!staticInitialized)
+        {
+            LoadAllTranslations();
+        }
+        
+        if (staticRussian.ContainsKey(key))
+            return staticRussian[key];
+        return key;
     }
 
     public string GetEnglish(string key)
     {
-        if (englishTranslations != null && englishTranslations.ContainsKey(key))
-            return englishTranslations[key];
-        return "";
+        if (!staticInitialized)
+        {
+            LoadAllTranslations();
+        }
+        
+        if (staticEnglish.ContainsKey(key))
+            return staticEnglish[key];
+        return key;
     }
 
     public void RemoveKey(string key)
@@ -157,11 +171,26 @@ public class LocalizationManager : MonoBehaviour
             russianTranslations.Remove(key);
         if (englishTranslations != null)
             englishTranslations.Remove(key);
+        if (staticRussian.ContainsKey(key))
+            staticRussian.Remove(key);
+        if (staticEnglish.ContainsKey(key))
+            staticEnglish.Remove(key);
     }
 
-    void LoadTranslations()
+    // Static methods for Editor access
+    public static void LoadStaticTranslations()
     {
-        russianTranslations = new Dictionary<string, string>
+        if (!staticInitialized)
+        {
+            LoadAllTranslationsStatic();
+        }
+    }
+
+    private static void LoadAllTranslationsStatic()
+    {
+        if (staticInitialized && staticRussian.Count > 0) return;
+
+        staticRussian = new Dictionary<string, string>
         {
             { "game_title", "WATERMELON FARM" },
             { "start_game", "НАЧАТЬ ИГРУ" },
@@ -195,20 +224,6 @@ public class LocalizationManager : MonoBehaviour
             { "max_level", "МАКС. УРОВЕНЬ" },
             { "unlock", "РАЗБЛОКИРОВАТЬ {0}" },
             { "all_unlocked", "ВСЕ РАЗБЛОКИРОВАНО" },
-            { "tooltip_grow_speed_max", "Достигнут максимальный уровень" },
-            { "tooltip_grow_speed", "Уровень {0}/{1}\nЭффект: +{2}%\nСледующий: +{3}%" },
-            { "tooltip_harvest_value_max", "Достигнут максимальный уровень" },
-            { "tooltip_harvest_value", "Уровень {0}/{1}\nЭффект: +{2}%\nСледующий: +{3}%" },
-            { "tooltip_crit_chance_max", "Достигнут максимальный уровень" },
-            { "tooltip_crit_chance", "Уровень {0}/{1}\nЭффект: +{2}%\nСледующий: +{3}%" },
-            { "tooltip_fertilizer_max", "Достигнут максимальный уровень" },
-            { "tooltip_fertilizer", "Уровень {0}/{1}\nЭффект: +{2}%\nСледующий: +{3}%" },
-            { "tooltip_super_seed_max", "Достигнут максимальный уровень" },
-            { "tooltip_super_seed", "Уровень {0}/{1}\nЭффект: +{2}%\nСледующий: +{3}%" },
-            { "tooltip_all_unlocked", "Все арбузы разблокированы!" },
-            { "tooltip_watermelon_unlock", "Разблокировать {0}\nСтоимость: {1} монет\nХар-ка: {2}" },
-            { "tooltip_max_upgrade", "Достигнут максимальный уровень" },
-            { "tooltip_not_enough_coins", "Недостаточно монет" },
             { "slot_empty", "Пусто" },
             { "confirm", "ПОДТВЕРДИТЬ" },
             { "cancel", "ОТМЕНА" },
@@ -220,7 +235,7 @@ public class LocalizationManager : MonoBehaviour
             { "coins_label", "Монеты" }
         };
 
-        englishTranslations = new Dictionary<string, string>
+        staticEnglish = new Dictionary<string, string>
         {
             { "game_title", "WATERMELON FARM" },
             { "start_game", "START GAME" },
@@ -254,20 +269,6 @@ public class LocalizationManager : MonoBehaviour
             { "max_level", "MAX LEVEL" },
             { "unlock", "UNLOCK {0}" },
             { "all_unlocked", "ALL UNLOCKED" },
-            { "tooltip_grow_speed_max", "Max level reached" },
-            { "tooltip_grow_speed", "Level {0}/{1}\nEffect: +{2}%\nNext: +{3}%" },
-            { "tooltip_harvest_value_max", "Max level reached" },
-            { "tooltip_harvest_value", "Level {0}/{1}\nEffect: +{2}%\nNext: +{3}%" },
-            { "tooltip_crit_chance_max", "Max level reached" },
-            { "tooltip_crit_chance", "Level {0}/{1}\nEffect: +{2}%\nNext: +{3}%" },
-            { "tooltip_fertilizer_max", "Max level reached" },
-            { "tooltip_fertilizer", "Level {0}/{1}\nEffect: +{2}%\nNext: +{3}%" },
-            { "tooltip_super_seed_max", "Max level reached" },
-            { "tooltip_super_seed", "Level {0}/{1}\nEffect: +{2}%\nNext: +{3}%" },
-            { "tooltip_all_unlocked", "All watermelons unlocked!" },
-            { "tooltip_watermelon_unlock", "Unlock {0}\nCost: {1} coins\nHarvest: {2}" },
-            { "tooltip_max_upgrade", "Max level reached" },
-            { "tooltip_not_enough_coins", "Not enough coins" },
             { "slot_empty", "Empty" },
             { "confirm", "CONFIRM" },
             { "cancel", "CANCEL" },
@@ -278,5 +279,53 @@ public class LocalizationManager : MonoBehaviour
             { "loading", "LOADING..." },
             { "coins_label", "Coins" }
         };
+
+        staticInitialized = true;
+    }
+
+    public static List<string> GetStaticKeys()
+    {
+        LoadAllTranslationsStatic();
+        var keys = new List<string>(staticRussian.Keys);
+        keys.Sort();
+        return keys;
+    }
+
+    public static string GetStaticRussian(string key)
+    {
+        LoadAllTranslationsStatic();
+        if (staticRussian.ContainsKey(key))
+            return staticRussian[key];
+        return key;
+    }
+
+    public static string GetStaticEnglish(string key)
+    {
+        LoadAllTranslationsStatic();
+        if (staticEnglish.ContainsKey(key))
+            return staticEnglish[key];
+        return key;
+    }
+
+    public static void SetStaticTranslation(string key, string russian, string english)
+    {
+        LoadAllTranslationsStatic();
+        staticRussian[key] = russian;
+        staticEnglish[key] = english;
+    }
+
+    void LoadAllTranslations()
+    {
+        if (staticInitialized && staticRussian.Count > 0)
+        {
+            russianTranslations = new Dictionary<string, string>(staticRussian);
+            englishTranslations = new Dictionary<string, string>(staticEnglish);
+            return;
+        }
+
+        LoadAllTranslationsStatic();
+
+        russianTranslations = new Dictionary<string, string>(staticRussian);
+        englishTranslations = new Dictionary<string, string>(staticEnglish);
     }
 }
