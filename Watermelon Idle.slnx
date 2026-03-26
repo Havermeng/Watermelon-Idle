@@ -123,6 +123,7 @@
   <Project Path="Unity.RenderPipeline.Universal.ShaderLibrary.csproj" />
   <Project Path="Unity.AI.Toolkit.Utility.csproj" />
   <Project Path="Unity.AI.Assistant.Bridge.Editor.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="Unity.AI.Generators.IO.Srp.csproj" />
   <Project Path="Unity.AI.Pbr.Srp.csproj" />
   <Project Path="Unity.Serialization.Editor.csproj" />
