@@ -12,6 +12,7 @@ public class LocalizationManager : MonoBehaviour
     private Dictionary<string, string> englishTranslations;
 
     public event System.Action OnLanguageChanged;
+    public event System.Action OnLanguageChangedDebug;
 
     void Awake()
     {
@@ -163,7 +164,16 @@ public class LocalizationManager : MonoBehaviour
     public void SetLanguage(string languageCode)
     {
         currentLanguage = languageCode.ToLower();
+        Debug.Log($"[Localization] Language changed to: {currentLanguage}");
+        Debug.Log($"[Localization] Subscribers: {OnLanguageChanged?.GetInvocationList()?.Length ?? 0}");
         OnLanguageChanged?.Invoke();
+        OnLanguageChangedDebug?.Invoke();
+    }
+
+    public void ToggleLanguage()
+    {
+        string newLang = currentLanguage == "ru" ? "en" : "ru";
+        SetLanguage(newLang);
     }
 
     public string Get(string key)

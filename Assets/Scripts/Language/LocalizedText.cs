@@ -51,11 +51,23 @@ public class LocalizedText : MonoBehaviour
 
     private void UpdateText()
     {
-        if (string.IsNullOrEmpty(localizationKey)) return;
-        if (LocalizationManager.Instance == null) return;
+        if (string.IsNullOrEmpty(localizationKey))
+        {
+            Debug.Log($"[LocalizedText] No key set on {gameObject.name}");
+            return;
+        }
+        if (LocalizationManager.Instance == null)
+        {
+            Debug.LogWarning($"[LocalizedText] LocalizationManager.Instance is null!");
+            return;
+        }
 
         string value = LocalizationManager.Instance.Get(localizationKey);
-        if (string.IsNullOrEmpty(value)) return;
+        if (string.IsNullOrEmpty(value))
+        {
+            Debug.LogWarning($"[LocalizedText] No translation for key: {localizationKey}");
+            return;
+        }
 
         if (formatArgs != null && formatArgs.Length > 0)
         {
@@ -63,18 +75,18 @@ public class LocalizedText : MonoBehaviour
             {
                 value = string.Format(value, (object[])formatArgs);
             }
-            catch
-            {
-            }
+            catch { }
         }
 
         if (tmpText != null)
         {
             tmpText.text = value;
+            Debug.Log($"[LocalizedText] Updated '{localizationKey}' to '{value}'");
         }
         else if (legacyText != null)
         {
             legacyText.text = value;
+            Debug.Log($"[LocalizedText] Updated '{localizationKey}' to '{value}'");
         }
     }
 
