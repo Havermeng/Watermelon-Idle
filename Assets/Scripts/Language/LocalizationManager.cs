@@ -126,6 +126,39 @@ public class LocalizationManager : MonoBehaviour
         return dict != null && dict.ContainsKey(key);
     }
 
+    public List<string> GetAllKeys()
+    {
+        var keys = new List<string>();
+        if (russianTranslations != null)
+        {
+            keys.AddRange(russianTranslations.Keys);
+        }
+        keys.Sort();
+        return keys;
+    }
+
+    public string GetRussian(string key)
+    {
+        if (russianTranslations != null && russianTranslations.ContainsKey(key))
+            return russianTranslations[key];
+        return "";
+    }
+
+    public string GetEnglish(string key)
+    {
+        if (englishTranslations != null && englishTranslations.ContainsKey(key))
+            return englishTranslations[key];
+        return "";
+    }
+
+    public void RemoveKey(string key)
+    {
+        if (russianTranslations != null)
+            russianTranslations.Remove(key);
+        if (englishTranslations != null)
+            englishTranslations.Remove(key);
+    }
+
     void LoadTranslations()
     {
         russianTranslations = new Dictionary<string, string>
