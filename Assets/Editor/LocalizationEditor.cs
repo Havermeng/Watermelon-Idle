@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using System.Reflection;
 
 public class LocalizationEditor : EditorWindow
 {
@@ -14,6 +15,8 @@ public class LocalizationEditor : EditorWindow
     
     private string searchFilter = "";
     private string selectedKey = "";
+    private string selectedKeyRussian = "";
+    private string selectedKeyEnglish = "";
     
     [MenuItem("Tools/Localization Editor")]
     public static void ShowWindow()
@@ -55,18 +58,13 @@ public class LocalizationEditor : EditorWindow
         }
 
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Localization Editor", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("=== Localization Editor ===", EditorStyles.boldLabel);
         EditorGUILayout.Space();
 
-        DrawMainContent();
-    }
-
-    void DrawMainContent()
-    {
         EditorGUILayout.BeginHorizontal();
         
         // Left panel - Keys list
-        EditorGUILayout.BeginVertical("box", GUILayout.Width(250));
+        EditorGUILayout.BeginVertical("box", GUILayout.Width(280));
         DrawKeysList();
         EditorGUILayout.EndVertical();
         
@@ -80,14 +78,14 @@ public class LocalizationEditor : EditorWindow
 
     void DrawKeysList()
     {
-        EditorGUILayout.LabelField("Keys", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Keys List", EditorStyles.boldLabel);
         
         searchFilter = EditorGUILayout.TextField("Search:", searchFilter);
         EditorGUILayout.Space();
 
         var allKeys = GetAllKeys();
         
-        keysScrollPosition = EditorGUILayout.BeginScrollView(keysScrollPosition, GUILayout.Height(400));
+        keysScrollPosition = EditorGUILayout.BeginScrollView(keysScrollPosition, GUILayout.Height(350));
         
         foreach (var key in allKeys)
         {
@@ -98,23 +96,19 @@ public class LocalizationEditor : EditorWindow
             }
             
             bool isSelected = (key == selectedKey);
-            string displayName = key.Length > 20 ? key.Substring(0, 20) + "..." : key;
+            string displayName = key;
             
-            EditorGUILayout.BeginHorizontal();
+            GUI.backgroundColor = isSelected ? Color.yellow : Color.white;
             
-            if (GUILayout.Button(displayName, isSelected ? "Button" : "Label"))
+            EditorGUILayout.BeginHorizontal("box");
+            
+            if (GUILayout.Button(displayName, isSelected ? "Button" : "Label", GUILayout.Height(25)))
             {
                 selectedKey = key;
+                LoadSelectedKeyTranslations();
             }
             
-            if (GUILayout.Button("X", GUILayout.Width(25)))
-            {
-                if (EditorUtility.DisplayDialog("Delete Key", 
-                    $"Delete key '{key}'?", "Delete", "Cancel"))
-                {
-                    DeleteKey(key);
-                }
-            }
+            GUI.backgroundColor = Color.white;
             
             EditorGUILayout.EndHorizontal();
         }
@@ -122,7 +116,43 @@ public class LocalizationEditor : EditorWindow
         EditorGUILayout.EndScrollView();
         
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField($"Total: {allKeys.Count} keys");
+        EditorGUILayout.LabelField($"Total: {allKeys.Count} keys", EditorStyles.miniLabel);
+        
+        EditorGUILayout.Space();
+        DrawAddNewKey();
+    }
+
+    void DrawAddNewKey()
+    {
+        EditorGUILayout.LabelField("Add New Key", EditorStyles.boldLabel);
+        
+        GUI.backgroundColor = Color.cyan;
+        newKeyName = EditorGUILayout.TextField("Key Name:", newKeyName);
+        GUI.backgroundColor = Color.white;
+        
+        newKeyRussian = EditorGUILayout.TextArea(newKeyRussian, GUILayout.Height(40));
+        EditorGUILayout.LabelField("Russian text", EditorStyles.miniLabel);
+        
+        newKeyEnglish = EditorGUILayout.TextArea(newKeyEnglish, GUILayout.Height(40));
+        EditorGUILayout.LabelField("English text", EditorStyles.miniLabel);
+        
+        GUI.backgroundColor = Color.green;
+        if (GUILayout.Button("+ Add Key", GUILayout.Height(30)))
+        {
+            if (!string.IsNullOrEmpty(newKeyName) && !string.IsNullOrEmpty(newKeyRussian) && !string.IsNullOrEmpty(newKeyEnglish))
+            {
+                AddNewKey(newKeyName, newKeyRussian, newKeyEnglish);
+                newKeyName = "";
+                newKeyRussian = "";
+                newKeyEnglish = "";
+                EditorUtility.DisplayDialog("Success", "Key added!", "OK");
+            }
+            else
+            {
+                EditorUtility.DisplayDialog("Error", "Fill all fields!", "OK");
+            }
+        }
+        GUI.backgroundColor = Color.white;
     }
 
     void DrawEditArea()
@@ -136,39 +166,52 @@ public class LocalizationEditor : EditorWindow
         }
         
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField($"Key: {selectedKey}");
         
-        var translations = GetTranslations(selectedKey);
-        string russian = translations.Item1;
-        string english = translations.Item2;
+        // Key name (readonly)
+        EditorGUILayout.LabelField("Key:", EditorStyles.boldLabel);
+        EditorGUILayout.TextField(selectedKey);
         
         EditorGUILayout.Space();
         
+        // Russian translation
+        GUI.backgroundColor = new Color(0.8f, 0.9f, 1f);
         EditorGUILayout.LabelField("Russian (RU):", EditorStyles.boldLabel);
-        russian = EditorGUILayout.TextArea(russian, GUILayout.Height(60));
+        selectedKeyRussian = EditorGUILayout.TextArea(selectedKeyRussian, GUILayout.Height(60));
+        GUI.backgroundColor = Color.white;
         
         EditorGUILayout.Space();
         
+        // English translation
+        GUI.backgroundColor = new Color(0.8f, 1f, 0.8f);
         EditorGUILayout.LabelField("English (EN):", EditorStyles.boldLabel);
-        english = EditorGUILayout.TextArea(english, GUILayout.Height(60));
+        selectedKeyEnglish = EditorGUILayout.TextArea(selectedKeyEnglish, GUILayout.Height(60));
+        GUI.backgroundColor = Color.white;
         
         EditorGUILayout.Space();
         
-        if (GUILayout.Button("Save Changes", GUILayout.Height(30)))
+        // Save button
+        GUI.backgroundColor = Color.yellow;
+        if (GUILayout.Button("💾 Save Changes", GUILayout.Height(35)))
         {
-            SaveTranslation(selectedKey, russian, english);
+            SaveTranslation(selectedKey, selectedKeyRussian, selectedKeyEnglish);
             EditorUtility.DisplayDialog("Saved", "Translation saved!", "OK");
         }
+        GUI.backgroundColor = Color.white;
         
         EditorGUILayout.Space();
+        
+        // Action buttons
         EditorGUILayout.BeginHorizontal();
         
-        if (GUILayout.Button("Duplicate Key"))
+        GUI.backgroundColor = Color.cyan;
+        if (GUILayout.Button("📋 Duplicate"))
         {
             DuplicateKey(selectedKey);
         }
+        GUI.backgroundColor = Color.white;
         
-        if (GUILayout.Button("Delete Key"))
+        GUI.backgroundColor = Color.red;
+        if (GUILayout.Button("🗑️ Delete"))
         {
             if (EditorUtility.DisplayDialog("Delete Key", 
                 $"Delete key '{selectedKey}'?", "Delete", "Cancel"))
@@ -176,6 +219,7 @@ public class LocalizationEditor : EditorWindow
                 DeleteKey(selectedKey);
             }
         }
+        GUI.backgroundColor = Color.white;
         
         EditorGUILayout.EndHorizontal();
     }
@@ -184,12 +228,14 @@ public class LocalizationEditor : EditorWindow
     {
         var keys = new List<string>();
         
-        var fields = typeof(LocalizationKeys).GetFields();
-        foreach (var field in fields)
+        // Read from the dictionaries using reflection
+        var dictField = typeof(LocalizationManager).GetField("russianTranslations", BindingFlags.NonPublic | BindingFlags.Instance);
+        if (dictField != null)
         {
-            if (field.FieldType == typeof(string))
+            var dict = dictField.GetValue(localizationManager) as Dictionary<string, string>;
+            if (dict != null)
             {
-                keys.Add(field.GetValue(null) as string);
+                keys.AddRange(dict.Keys);
             }
         }
         
@@ -197,45 +243,36 @@ public class LocalizationEditor : EditorWindow
         return keys;
     }
 
+    void LoadSelectedKeyTranslations()
+    {
+        var translations = GetTranslations(selectedKey);
+        selectedKeyRussian = translations.Item1;
+        selectedKeyEnglish = translations.Item2;
+    }
+
     (string, string) GetTranslations(string key)
     {
         string russian = "";
         string english = "";
         
-        SerializedObject so = new SerializedObject(localizationManager);
+        var russianDictField = typeof(LocalizationManager).GetField("russianTranslations", BindingFlags.NonPublic | BindingFlags.Instance);
+        var englishDictField = typeof(LocalizationManager).GetField("englishTranslations", BindingFlags.NonPublic | BindingFlags.Instance);
         
-        var russianDict = so.FindProperty("russianTranslations");
-        var englishDict = so.FindProperty("englishTranslations");
-        
-        if (russianDict != null && russianDict.isArray)
+        if (russianDictField != null)
         {
-            for (int i = 0; i < russianDict.arraySize; i++)
+            var dict = russianDictField.GetValue(localizationManager) as Dictionary<string, string>;
+            if (dict != null && dict.ContainsKey(key))
             {
-                var element = russianDict.GetArrayElementAtIndex(i);
-                var keyProp = element.FindPropertyRelative("key");
-                var valueProp = element.FindPropertyRelative("value");
-                
-                if (keyProp != null && keyProp.stringValue == key)
-                {
-                    russian = valueProp != null ? valueProp.stringValue : "";
-                    break;
-                }
+                russian = dict[key];
             }
         }
         
-        if (englishDict != null && englishDict.isArray)
+        if (englishDictField != null)
         {
-            for (int i = 0; i < englishDict.arraySize; i++)
+            var dict = englishDictField.GetValue(localizationManager) as Dictionary<string, string>;
+            if (dict != null && dict.ContainsKey(key))
             {
-                var element = englishDict.GetArrayElementAtIndex(i);
-                var keyProp = element.FindPropertyRelative("key");
-                var valueProp = element.FindPropertyRelative("value");
-                
-                if (keyProp != null && keyProp.stringValue == key)
-                {
-                    english = valueProp != null ? valueProp.stringValue : "";
-                    break;
-                }
+                english = dict[key];
             }
         }
         
@@ -248,18 +285,42 @@ public class LocalizationEditor : EditorWindow
         EditorUtility.SetDirty(localizationManager);
     }
 
+    void AddNewKey(string key, string russian, string english)
+    {
+        localizationManager.SetTranslation(key, russian, english);
+        EditorUtility.SetDirty(localizationManager);
+        selectedKey = key;
+        LoadSelectedKeyTranslations();
+    }
+
     void DeleteKey(string key)
     {
+        var russianDictField = typeof(LocalizationManager).GetField("russianTranslations", BindingFlags.NonPublic | BindingFlags.Instance);
+        var englishDictField = typeof(LocalizationManager).GetField("englishTranslations", BindingFlags.NonPublic | BindingFlags.Instance);
+        
+        if (russianDictField != null)
+        {
+            var dict = russianDictField.GetValue(localizationManager) as Dictionary<string, string>;
+            if (dict != null) dict.Remove(key);
+        }
+        
+        if (englishDictField != null)
+        {
+            var dict = englishDictField.GetValue(localizationManager) as Dictionary<string, string>;
+            if (dict != null) dict.Remove(key);
+        }
+        
+        EditorUtility.SetDirty(localizationManager);
         selectedKey = "";
+        selectedKeyRussian = "";
+        selectedKeyEnglish = "";
     }
 
     void DuplicateKey(string key)
     {
-        string newKeyName = key + "_copy";
+        string newKey = key + "_copy";
         var translations = GetTranslations(key);
-        localizationManager.SetTranslation(newKeyName, translations.Item1, translations.Item2);
-        EditorUtility.SetDirty(localizationManager);
-        selectedKey = newKeyName;
+        AddNewKey(newKey, translations.Item1, translations.Item2);
     }
 
     void CreateLocalizationManager()
@@ -268,49 +329,4 @@ public class LocalizationEditor : EditorWindow
         localizationManager = go.AddComponent<LocalizationManager>();
         DontDestroyOnLoad(go);
     }
-}
-
-public static class LocalizationKeys
-{
-    public const string GAME_TITLE = "game_title";
-    public const string START_GAME = "start_game";
-    public const string SETTINGS = "settings";
-    public const string QUIT = "quit";
-    public const string SAVE = "save";
-    public const string EXIT = "exit";
-    public const string BACK = "back";
-    public const string PLAY = "play";
-    public const string RESET = "reset";
-    public const string RENAME = "rename";
-    public const string EMPTY_SAVE = "empty_save";
-    public const string OPEN_SHOP = "open_shop";
-    public const string AUDIO = "audio";
-    public const string MUSIC_VOLUME = "music_volume";
-    public const string SFX_VOLUME = "sfx_volume";
-    public const string SLOT = "slot";
-    public const string SLOT_NUMBER = "slot_number";
-    public const string SAVE_NAME = "save_name";
-    public const string SAVE_DATE = "save_date";
-    public const string NEW_SAVE = "new_save";
-    public const string LOAD_SAVE = "load_save";
-    public const string DELETE_SAVE = "delete_save";
-    public const string GROW_SPEED = "grow_speed";
-    public const string HARVEST_VALUE = "harvest_value";
-    public const string CRIT_HARVEST = "crit_harvest";
-    public const string FERTILIZER = "fertilizer";
-    public const string SUPER_SEEDS = "super_seeds";
-    public const string LEVEL = "level";
-    public const string COINS = "coins";
-    public const string MAX_LEVEL = "max_level";
-    public const string UNLOCK = "unlock";
-    public const string ALL_UNLOCKED = "all_unlocked";
-    public const string SLOT_EMPTY = "slot_empty";
-    public const string CONFIRM = "confirm";
-    public const string CANCEL = "cancel";
-    public const string PAUSED = "paused";
-    public const string RESUME = "resume";
-    public const string MAIN_MENU = "main_menu";
-    public const string VERSIONS = "versions";
-    public const string LOADING = "loading";
-    public const string COINS_LABEL = "coins_label";
 }
