@@ -5,14 +5,13 @@ public class LocalizationManager : MonoBehaviour
 {
     public static LocalizationManager Instance { get; private set; }
 
-    public string defaultLanguage = "ru";
+    [SerializeField] private string defaultLanguage = "ru";
 
     private string currentLanguage;
     private Dictionary<string, string> russianTranslations;
     private Dictionary<string, string> englishTranslations;
 
     public event System.Action OnLanguageChanged;
-    public event System.Action OnLanguageChangedDebug;
 
     void Awake()
     {
@@ -27,20 +26,97 @@ public class LocalizationManager : MonoBehaviour
             return;
         }
 
-        // Инициализируем словари
         russianTranslations = new Dictionary<string, string>();
         englishTranslations = new Dictionary<string, string>();
-
-        // Загружаем переводы
         LoadTranslations();
+    }
 
-        // Устанавливаем язык по умолчанию
-        SetLanguage(defaultLanguage);
+    void Start()
+    {
+        InitializeLanguage();
+    }
+
+    void InitializeLanguage()
+    {
+        string savedLang = PlayerPrefs.GetString("Language", "");
+        
+        if (!string.IsNullOrEmpty(savedLang))
+        {
+            SetLanguage(savedLang, save: false);
+            return;
+        }
+
+        string systemLang = Application.systemLanguage.ToString().ToLower();
+        if (systemLang.Contains("russian"))
+        {
+            SetLanguage("ru", save: true);
+        }
+        else
+        {
+            SetLanguage("en", save: true);
+        }
+    }
+
+    public void SetLanguage(string languageCode, bool save = true)
+    {
+        currentLanguage = languageCode.ToLower();
+        
+        if (save)
+        {
+            PlayerPrefs.SetString("Language", currentLanguage);
+        }
+        
+        OnLanguageChanged?.Invoke();
+    }
+
+    public void ToggleLanguage()
+    {
+        string newLang = currentLanguage == "ru" ? "en" : "ru";
+        SetLanguage(newLang);
+    }
+
+    public string Get(string key)
+    {
+        return Get(key, key);
+    }
+
+    public string Get(string key, string defaultValue)
+    {
+        if (string.IsNullOrEmpty(key))
+            return defaultValue;
+
+        Dictionary<string, string> dict = currentLanguage == "ru" ? russianTranslations : englishTranslations;
+        if (dict != null && dict.ContainsKey(key))
+        {
+            return dict[key];
+        }
+
+        return defaultValue;
+    }
+
+    public string GetFormatted(string key, params object[] args)
+    {
+        string format = Get(key);
+        try
+        {
+            return string.Format(format, args);
+        }
+        catch
+        {
+            return format;
+        }
+    }
+
+    public string GetCurrentLanguage() => currentLanguage;
+
+    public bool HasKey(string key)
+    {
+        Dictionary<string, string> dict = currentLanguage == "ru" ? russianTranslations : englishTranslations;
+        return dict != null && dict.ContainsKey(key);
     }
 
     void LoadTranslations()
     {
-        // Русские переводы
         russianTranslations = new Dictionary<string, string>
         {
             { "game_title", "WATERMELON FARM" },
@@ -100,7 +176,6 @@ public class LocalizationManager : MonoBehaviour
             { "coins_label", "Монеты" }
         };
 
-        // Английские переводы
         englishTranslations = new Dictionary<string, string>
         {
             { "game_title", "WATERMELON FARM" },
@@ -159,79 +234,5 @@ public class LocalizationManager : MonoBehaviour
             { "loading", "LOADING..." },
             { "coins_label", "Coins" }
         };
-    }
-
-    public void SetLanguage(string languageCode)
-    {
-        currentLanguage = languageCode.ToLower();
-        Debug.Log($"[Localization] Language changed to: {currentLanguage}");
-        Debug.Log($"[Localization] Subscribers: {OnLanguageChanged?.GetInvocationList()?.Length ?? 0}");
-        OnLanguageChanged?.Invoke();
-        OnLanguageChangedDebug?.Invoke();
-    }
-
-    public void ToggleLanguage()
-    {
-        string newLang = currentLanguage == "ru" ? "en" : "ru";
-        SetLanguage(newLang);
-    }
-
-    public string Get(string key)
-    {
-        return Get(key, key);
-    }
-
-    /// <summary>
-    /// Возвращает перевод для ключа. Если ключ не найден, возвращает default value
-    /// </summary>
-    public string Get(string key, string defaultValue)
-    {
-        if (string.IsNullOrEmpty(key))
-            return defaultValue;
-
-        Dictionary<string, string> dict = currentLanguage == "ru" ? russianTranslations : englishTranslations;
-        if (dict != null && dict.ContainsKey(key))
-        {
-            return dict[key];
-        }
-
-        return defaultValue;
-    }
-
-    public string GetFormatted(string key, params object[] args)
-    {
-        string format = Get(key);
-        try
-        {
-            return string.Format(format, args);
-        }
-        catch (System.FormatException e)
-        {
-            Debug.LogWarning($"LocalizationManager: Ошибка форматирования для ключа '{key}': {e.Message}");
-            return format;
-        }
-    }
-
-    public string GetCurrentLanguage() => currentLanguage;
-
-    public bool HasKey(string key)
-    {
-        Dictionary<string, string> dict = currentLanguage == "ru" ? russianTranslations : englishTranslations;
-        return dict != null && dict.ContainsKey(key);
-    }
-
-    public void SetTranslation(string key, string russian, string english)
-    {
-        // Добавляем/обновляем переводы
-        if (!string.IsNullOrEmpty(russian))
-            russianTranslations[key] = russian;
-        if (!string.IsNullOrEmpty(english))
-            englishTranslations[key] = english;
-    }
-
-    public List<string> GetAllKeys()
-    {
-        // Возвращаем ключи из русского словаря (или любого)
-        return new List<string>(russianTranslations.Keys);
     }
 }

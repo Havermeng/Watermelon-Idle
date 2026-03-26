@@ -10,9 +10,11 @@ public class SettingsUI : MonoBehaviour
 
     void OnEnable()
     {
-        if (AudioManager.Instance == null) return;
-        musicSlider.value = AudioManager.Instance.GetMusicVolume();
-        sfxSlider.value = AudioManager.Instance.GetSFXVolume();
+        if (AudioManager.Instance != null)
+        {
+            if (musicSlider != null) musicSlider.value = AudioManager.Instance.GetMusicVolume();
+            if (sfxSlider != null) sfxSlider.value = AudioManager.Instance.GetSFXVolume();
+        }
         UpdateLanguageButtons();
     }
 

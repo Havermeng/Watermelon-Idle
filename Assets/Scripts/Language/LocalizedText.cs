@@ -1,7 +1,5 @@
-using System;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class LocalizedText : MonoBehaviour
 {
@@ -9,18 +7,13 @@ public class LocalizedText : MonoBehaviour
     [SerializeField] private string[] formatArgs;
     
     private TMP_Text tmpText;
-    private Text legacyText;
 
     void Awake()
     {
         tmpText = GetComponent<TMP_Text>();
-        if (tmpText == null)
-        {
-            legacyText = GetComponent<Text>();
-        }
     }
 
-    void OnEnable()
+    void Start()
     {
         if (LocalizationManager.Instance != null)
         {
@@ -29,7 +22,7 @@ public class LocalizedText : MonoBehaviour
         UpdateText();
     }
 
-    void OnDisable()
+    void OnDestroy()
     {
         if (LocalizationManager.Instance != null)
         {
@@ -51,23 +44,12 @@ public class LocalizedText : MonoBehaviour
 
     private void UpdateText()
     {
-        if (string.IsNullOrEmpty(localizationKey))
-        {
-            Debug.Log($"[LocalizedText] No key set on {gameObject.name}");
-            return;
-        }
-        if (LocalizationManager.Instance == null)
-        {
-            Debug.LogWarning($"[LocalizedText] LocalizationManager.Instance is null!");
-            return;
-        }
+        if (tmpText == null) return;
+        if (string.IsNullOrEmpty(localizationKey)) return;
+        if (LocalizationManager.Instance == null) return;
 
         string value = LocalizationManager.Instance.Get(localizationKey);
-        if (string.IsNullOrEmpty(value))
-        {
-            Debug.LogWarning($"[LocalizedText] No translation for key: {localizationKey}");
-            return;
-        }
+        if (string.IsNullOrEmpty(value)) return;
 
         if (formatArgs != null && formatArgs.Length > 0)
         {
@@ -78,16 +60,7 @@ public class LocalizedText : MonoBehaviour
             catch { }
         }
 
-        if (tmpText != null)
-        {
-            tmpText.text = value;
-            Debug.Log($"[LocalizedText] Updated '{localizationKey}' to '{value}'");
-        }
-        else if (legacyText != null)
-        {
-            legacyText.text = value;
-            Debug.Log($"[LocalizedText] Updated '{localizationKey}' to '{value}'");
-        }
+        tmpText.text = value;
     }
 
     public string Key
