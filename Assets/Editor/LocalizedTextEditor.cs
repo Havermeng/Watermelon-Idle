@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEditor;
+using TMPro;
 using System.Collections.Generic;
 
 [CustomEditor(typeof(LocalizedText))]
@@ -8,8 +9,14 @@ public class LocalizedTextEditor : Editor
     private LocalizedText localizedText;
     private LocalizationManager locManager;
     private List<string> allKeys = new List<string>();
-    private string searchFilter = "";
     
+    private string searchFilter = "";
+    private Vector2 scrollPosition;
+    
+    private string editRU = "";
+    private string editEN = "";
+    private bool isEditing = false;
+
     void OnEnable()
     {
         localizedText = (LocalizedText)target;
@@ -23,6 +30,16 @@ public class LocalizedTextEditor : Editor
         {
             locManager = managers[0];
             allKeys = locManager.GetAllKeys();
+            LoadCurrentKeyValues();
+        }
+    }
+
+    void LoadCurrentKeyValues()
+    {
+        if (locManager != null && !string.IsNullOrEmpty(localizedText.Key))
+        {
+            editRU = locManager.GetRussian(localizedText.Key);
+            editEN = locManager.GetEnglish(localizedText.Key);
         }
     }
 
@@ -32,146 +49,149 @@ public class LocalizedTextEditor : Editor
         
         FindLocalizationManager();
 
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("=== Localized Text ===", EditorStyles.boldLabel);
+        EditorGUILayout.Space();
+
+        // Search / Key list
+        EditorGUILayout.LabelField("Список ключей:", EditorStyles.boldLabel);
+        searchFilter = EditorGUILayout.TextField("Поиск:", searchFilter);
+        
         if (locManager == null)
         {
-            EditorGUILayout.HelpBox("LocalizationManager not found in scene!", MessageType.Warning);
+            EditorGUILayout.HelpBox("LocalizationManager не найден!", MessageType.Warning);
             
-            if (GUILayout.Button("Find Manager"))
+            if (GUILayout.Button("Создать LocalizationManager"))
             {
-                FindLocalizationManager();
+                GameObject go = new GameObject("LocalizationManager");
+                locManager = go.AddComponent<LocalizationManager>();
+                DontDestroyOnLoad(go);
+                allKeys = locManager.GetAllKeys();
             }
             
             serializedObject.ApplyModifiedProperties();
             return;
         }
 
-        EditorGUILayout.Space();
+        // Keys list
+        EditorGUILayout.BeginVertical("box", GUILayout.Height(150));
         
-        EditorGUILayout.LabelField("=== Localized Text ===", EditorStyles.boldLabel);
+        scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
         
-        EditorGUILayout.Space();
-        
-        // Key selection
-        EditorGUILayout.LabelField("Localization Key:", EditorStyles.boldLabel);
-        
-        searchFilter = EditorGUILayout.TextField("Search:", searchFilter);
-        
-        EditorGUILayout.BeginVertical("box");
-        
-        // Filter keys
         var filteredKeys = allKeys.FindAll(k => 
             string.IsNullOrEmpty(searchFilter) || 
             k.ToLower().Contains(searchFilter.ToLower()));
         
-        // Current key display
-        EditorGUILayout.LabelField("Current: " + localizedText.Key, EditorStyles.boldLabel);
+        foreach (var key in filteredKeys)
+        {
+            bool isSelected = (key == localizedText.Key);
+            
+            GUI.backgroundColor = isSelected ? Color.yellow : Color.white;
+            
+            if (GUILayout.Button(key, isSelected ? "Button" : "Label"))
+            {
+                Undo.RecordObject(localizedText, "Change Key");
+                serializedObject.FindProperty("localizationKey").stringValue = key;
+                LoadCurrentKeyValues();
+                localizedText.ForceUpdate();
+                isEditing = false;
+            }
+        }
+        
+        GUI.backgroundColor = Color.white;
+        
+        EditorGUILayout.EndScrollView();
+        EditorGUILayout.EndVertical();
+
+        EditorGUILayout.Space();
+
+        // Selected key info
+        EditorGUILayout.LabelField("Выбранный ключ: " + localizedText.Key, EditorStyles.boldLabel);
         
         if (!string.IsNullOrEmpty(localizedText.Key))
         {
-            EditorGUILayout.LabelField("RU: " + locManager.GetRussian(localizedText.Key), EditorStyles.miniLabel);
-            EditorGUILayout.LabelField("EN: " + locManager.GetEnglish(localizedText.Key), EditorStyles.miniLabel);
+            // Show RU/EN versions
+            GUI.backgroundColor = new Color(0.9f, 0.95f, 1f);
+            EditorGUILayout.LabelField("RU версия:", EditorStyles.boldLabel);
+            GUI.backgroundColor = Color.white;
+            
+            GUI.backgroundColor = new Color(0.9f, 0.95f, 1f);
+            string newRU = EditorGUILayout.TextArea(editRU, GUILayout.Height(40));
+            GUI.backgroundColor = Color.white;
+            
+            GUI.backgroundColor = new Color(0.9f, 1f, 0.9f);
+            EditorGUILayout.LabelField("EN версия:", EditorStyles.boldLabel);
+            GUI.backgroundColor = Color.white;
+            
+            GUI.backgroundColor = new Color(0.9f, 1f, 0.9f);
+            string newEN = EditorGUILayout.TextArea(editEN, GUILayout.Height(40));
+            GUI.backgroundColor = Color.white;
+            
+            // Save button
+            EditorGUILayout.Space();
+            
+            GUI.backgroundColor = Color.yellow;
+            if (GUILayout.Button("💾 Сохранить изменения", GUILayout.Height(35)))
+            {
+                bool changed = false;
+                
+                if (editRU != newRU)
+                {
+                    editRU = newRU;
+                    changed = true;
+                }
+                
+                if (editEN != newEN)
+                {
+                    editEN = newEN;
+                    changed = true;
+                }
+                
+                if (changed)
+                {
+                    locManager.SetTranslation(localizedText.Key, editRU, editEN);
+                    EditorUtility.SetDirty(locManager);
+                    localizedText.ForceUpdate();
+                    EditorUtility.DisplayDialog("Сохранено", "Перевод сохранён!", "OK");
+                }
+            }
+            GUI.backgroundColor = Color.white;
+            
+            EditorGUILayout.Space();
+            
+            // Current text preview
+            EditorGUILayout.LabelField("Текущий текст: " + localizedText.CurrentText, EditorStyles.boldLabel);
         }
-        
+
         EditorGUILayout.Space();
-        
-        // Key dropdown
-        string[] displayKeys = new string[filteredKeys.Count + 1];
-        displayKeys[0] = "-- Select Key --";
-        for (int i = 0; i < filteredKeys.Count; i++)
-        {
-            displayKeys[i + 1] = filteredKeys[i];
-        }
-        
-        int currentIndex = filteredKeys.IndexOf(localizedText.Key) + 1;
-        int newIndex = EditorGUILayout.Popup("Select Key:", currentIndex, displayKeys);
-        
-        if (newIndex != currentIndex && newIndex > 0)
-        {
-            Undo.RecordObject(localizedText, "Change Localization Key");
-            serializedObject.FindProperty("localizationKey").stringValue = displayKeys[newIndex];
-            localizedText.ForceUpdate();
-        }
-        
-        EditorGUILayout.EndVertical();
-        
-        EditorGUILayout.Space();
-        
-        // Manual key input
-        EditorGUILayout.BeginHorizontal();
-        GUI.backgroundColor = Color.cyan;
-        if (GUILayout.Button("Set Key Manually"))
-        {
-            // Opens a popup for manual input
-            ShowKeyInputPopup();
-        }
-        GUI.backgroundColor = Color.white;
-        
-        if (GUILayout.Button("Clear"))
-        {
-            Undo.RecordObject(localizedText, "Clear Localization Key");
-            serializedObject.FindProperty("localizationKey").stringValue = "";
-            localizedText.ClearKey();
-        }
-        EditorGUILayout.EndHorizontal();
-        
-        EditorGUILayout.Space();
-        
-        // Preview
-        EditorGUILayout.LabelField("Preview:", EditorStyles.boldLabel);
-        
-        EditorGUILayout.BeginVertical("box");
-        
-        string ruText = locManager.GetRussian(localizedText.Key);
-        string enText = locManager.GetEnglish(localizedText.Key);
-        
-        EditorGUILayout.LabelField("RU: " + (string.IsNullOrEmpty(ruText) ? "(empty)" : ruText));
-        EditorGUILayout.LabelField("EN: " + (string.IsNullOrEmpty(enText) ? "(empty)" : enText));
-        
-        EditorGUILayout.Space();
-        
-        EditorGUILayout.LabelField("Current Text: " + localizedText.CurrentText, EditorStyles.boldLabel);
-        
-        EditorGUILayout.EndVertical();
-        
-        EditorGUILayout.Space();
-        
+
         // Actions
         EditorGUILayout.BeginHorizontal();
         
-        if (GUILayout.Button("🔄 Update Now"))
+        if (GUILayout.Button("🔄 Обновить"))
         {
+            LoadCurrentKeyValues();
             localizedText.ForceUpdate();
+        }
+        
+        if (GUILayout.Button("❌ Очистить"))
+        {
+            Undo.RecordObject(localizedText, "Clear Key");
+            serializedObject.FindProperty("localizationKey").stringValue = "";
+            editRU = "";
+            editEN = "";
+            localizedText.ClearKey();
         }
         
         EditorGUILayout.EndHorizontal();
-        
+
         EditorGUILayout.Space();
-        
-        // Reference to key list
+
+        // Info
         EditorGUILayout.HelpBox(
-            "Open Tools > Localization Editor to manage all translation keys.",
+            "Откройте Tools > Localization Editor для управления всеми ключами.",
             MessageType.Info);
-        
+
         serializedObject.ApplyModifiedProperties();
-    }
-
-    void ShowKeyInputPopup()
-    {
-        string input = EditorInputDialog.Show("Enter Key", "Enter localization key:", localizedText.Key);
-        if (!string.IsNullOrEmpty(input))
-        {
-            Undo.RecordObject(localizedText, "Set Localization Key");
-            serializedObject.FindProperty("localizationKey").stringValue = input;
-            localizedText.ForceUpdate();
-        }
-    }
-}
-
-public class EditorInputDialog
-{
-    public static string Show(string title, string message, string defaultValue = "")
-    {
-        EditorUtility.DisplayDialog(title, message, "OK");
-        return defaultValue;
     }
 }
