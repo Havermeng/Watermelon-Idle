@@ -5,8 +5,8 @@ using System.Collections.Generic;
 public class LocalizationEditor : EditorWindow
 {
     private LocalizationManager localizationManager;
-    private Vector2 scrollPosition;
-    private Vector2 keysScrollPosition;
+    private List<string> cachedKeys = new List<string>();
+    private bool needsReload = true;
     
     private string newKeyName = "";
     private string newKeyRussian = "";
@@ -28,20 +28,44 @@ public class LocalizationEditor : EditorWindow
         FindLocalizationManager();
     }
 
+    void OnFocus()
+    {
+        needsReload = true;
+    }
+
     void FindLocalizationManager()
     {
         LocalizationManager[] managers = FindObjectsOfType<LocalizationManager>(true);
         if (managers.Length > 0)
         {
             localizationManager = managers[0];
+            needsReload = true;
         }
+    }
+
+    void ReloadKeys()
+    {
+        if (localizationManager == null)
+        {
+            cachedKeys = new List<string>();
+            return;
+        }
+
+        cachedKeys = localizationManager.GetAllKeys();
+        needsReload = false;
+        Repaint();
     }
 
     void OnGUI()
     {
         if (localizationManager == null)
         {
-            EditorGUILayout.HelpBox("LocalizationManager not found in scene!", MessageType.Warning);
+            FindLocalizationManager();
+        }
+
+        if (localizationManager == null)
+        {
+            EditorGUILayout.HelpBox("LocalizationManager not found!", MessageType.Warning);
             
             if (GUILayout.Button("Find in Scene"))
             {
@@ -56,8 +80,19 @@ public class LocalizationEditor : EditorWindow
             return;
         }
 
+        if (needsReload)
+        {
+            ReloadKeys();
+        }
+
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("=== Localization Editor ===", EditorStyles.boldLabel);
+        
+        if (GUILayout.Button("🔄 Reload Keys"))
+        {
+            ReloadKeys();
+        }
+        
         EditorGUILayout.Space();
 
         EditorGUILayout.BeginHorizontal();
@@ -75,45 +110,46 @@ public class LocalizationEditor : EditorWindow
 
     void DrawKeysList()
     {
-        EditorGUILayout.LabelField("Keys List", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Keys List (" + cachedKeys.Count + ")", EditorStyles.boldLabel);
         
-        searchFilter = EditorGUILayout.TextField("Search:", searchFilter);
+        EditorGUILayout.BeginHorizontal();
+        searchFilter = EditorGUILayout.TextField(searchFilter, GUILayout.Width(150));
+        if (GUILayout.Button("X", GUILayout.Width(25)))
+        {
+            searchFilter = "";
+        }
+        EditorGUILayout.EndHorizontal();
+        
         EditorGUILayout.Space();
 
-        var allKeys = localizationManager.GetAllKeys();
-        
-        keysScrollPosition = EditorGUILayout.BeginScrollView(keysScrollPosition, GUILayout.Height(300));
-        
-        foreach (var key in allKeys)
+        int displayCount = 0;
+        foreach (var key in cachedKeys)
         {
             if (!string.IsNullOrEmpty(searchFilter) && 
                 !key.ToLower().Contains(searchFilter.ToLower()))
             {
                 continue;
             }
+            displayCount++;
             
             bool isSelected = (key == selectedKey);
-            string displayName = key;
             
-            GUI.backgroundColor = isSelected ? Color.yellow : Color.white;
+            if (isSelected)
+            {
+                GUI.backgroundColor = Color.yellow;
+            }
             
-            EditorGUILayout.BeginHorizontal("box");
-            
-            if (GUILayout.Button(displayName, isSelected ? "Button" : "Label", GUILayout.Height(25)))
+            if (GUILayout.Button(key, GUILayout.Height(25)))
             {
                 selectedKey = key;
                 LoadSelectedKeyTranslations();
             }
             
             GUI.backgroundColor = Color.white;
-            
-            EditorGUILayout.EndHorizontal();
         }
         
-        EditorGUILayout.EndScrollView();
-        
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField($"Total: {allKeys.Count} keys", EditorStyles.miniLabel);
+        EditorGUILayout.LabelField($"Showing: {displayCount} / {cachedKeys.Count} keys", EditorStyles.miniLabel);
         
         EditorGUILayout.Space();
         DrawAddNewKey();
@@ -128,17 +164,17 @@ public class LocalizationEditor : EditorWindow
         EditorGUILayout.LabelField("Add New Key", EditorStyles.boldLabel);
         
         GUI.backgroundColor = Color.cyan;
-        newKeyName = EditorGUILayout.TextField("Key Name:", newKeyName);
+        newKeyName = EditorGUILayout.TextField("Key:", newKeyName, GUILayout.Width(250));
         GUI.backgroundColor = Color.white;
         
-        newKeyRussian = EditorGUILayout.TextArea(newKeyRussian, GUILayout.Height(40));
-        EditorGUILayout.LabelField("Russian text", EditorStyles.miniLabel);
+        newKeyRussian = EditorGUILayout.TextArea(newKeyRussian, GUILayout.Height(35));
+        EditorGUILayout.LabelField("Russian", EditorStyles.miniLabel);
         
-        newKeyEnglish = EditorGUILayout.TextArea(newKeyEnglish, GUILayout.Height(40));
-        EditorGUILayout.LabelField("English text", EditorStyles.miniLabel);
+        newKeyEnglish = EditorGUILayout.TextArea(newKeyEnglish, GUILayout.Height(35));
+        EditorGUILayout.LabelField("English", EditorStyles.miniLabel);
         
         GUI.backgroundColor = new Color(0.4f, 0.9f, 0.4f);
-        if (GUILayout.Button("+ Add Key", GUILayout.Height(30)))
+        if (GUILayout.Button("+ Add Key", GUILayout.Height(25)))
         {
             if (!string.IsNullOrEmpty(newKeyName) && !string.IsNullOrEmpty(newKeyRussian) && !string.IsNullOrEmpty(newKeyEnglish))
             {
@@ -146,7 +182,7 @@ public class LocalizationEditor : EditorWindow
                 newKeyName = "";
                 newKeyRussian = "";
                 newKeyEnglish = "";
-                EditorUtility.DisplayDialog("Success", "Key added!", "OK");
+                needsReload = true;
             }
             else
             {
@@ -164,7 +200,7 @@ public class LocalizationEditor : EditorWindow
         
         if (string.IsNullOrEmpty(selectedKey))
         {
-            EditorGUILayout.HelpBox("Select a key from the list to edit", MessageType.Info);
+            EditorGUILayout.HelpBox("Select a key from the list", MessageType.Info);
             return;
         }
         
@@ -178,23 +214,23 @@ public class LocalizationEditor : EditorWindow
         
         GUI.backgroundColor = new Color(0.8f, 0.9f, 1f);
         EditorGUILayout.LabelField("Russian (RU):", EditorStyles.boldLabel);
-        selectedKeyRussian = EditorGUILayout.TextArea(selectedKeyRussian, GUILayout.Height(60));
+        selectedKeyRussian = EditorGUILayout.TextArea(selectedKeyRussian, GUILayout.Height(50));
         GUI.backgroundColor = Color.white;
         
         EditorGUILayout.Space();
         
         GUI.backgroundColor = new Color(0.8f, 1f, 0.8f);
         EditorGUILayout.LabelField("English (EN):", EditorStyles.boldLabel);
-        selectedKeyEnglish = EditorGUILayout.TextArea(selectedKeyEnglish, GUILayout.Height(60));
+        selectedKeyEnglish = EditorGUILayout.TextArea(selectedKeyEnglish, GUILayout.Height(50));
         GUI.backgroundColor = Color.white;
         
         EditorGUILayout.Space();
         
         GUI.backgroundColor = Color.yellow;
-        if (GUILayout.Button("Save Changes", GUILayout.Height(35)))
+        if (GUILayout.Button("Save Changes", GUILayout.Height(30)))
         {
             SaveTranslation(selectedKey, selectedKeyRussian, selectedKeyEnglish);
-            EditorUtility.DisplayDialog("Saved", "Translation saved!", "OK");
+            needsReload = true;
         }
         GUI.backgroundColor = Color.white;
         
@@ -206,16 +242,17 @@ public class LocalizationEditor : EditorWindow
         if (GUILayout.Button("Duplicate"))
         {
             DuplicateKey(selectedKey);
+            needsReload = true;
         }
         GUI.backgroundColor = Color.white;
         
         GUI.backgroundColor = new Color(1f, 0.6f, 0.6f);
         if (GUILayout.Button("Delete"))
         {
-            if (EditorUtility.DisplayDialog("Delete Key", 
-                $"Delete key '{selectedKey}'?", "Delete", "Cancel"))
+            if (EditorUtility.DisplayDialog("Delete", $"Delete '{selectedKey}'?", "Delete", "Cancel"))
             {
                 DeleteKey(selectedKey);
+                needsReload = true;
             }
         }
         GUI.backgroundColor = Color.white;
@@ -225,18 +262,24 @@ public class LocalizationEditor : EditorWindow
 
     void LoadSelectedKeyTranslations()
     {
+        if (localizationManager == null || string.IsNullOrEmpty(selectedKey)) return;
+        
         selectedKeyRussian = localizationManager.GetRussian(selectedKey);
         selectedKeyEnglish = localizationManager.GetEnglish(selectedKey);
     }
 
     void SaveTranslation(string key, string russian, string english)
     {
+        if (localizationManager == null) return;
+        
         localizationManager.SetTranslation(key, russian, english);
         EditorUtility.SetDirty(localizationManager);
     }
 
     void AddNewKey(string key, string russian, string english)
     {
+        if (localizationManager == null) return;
+        
         localizationManager.SetTranslation(key, russian, english);
         EditorUtility.SetDirty(localizationManager);
         selectedKey = key;
@@ -245,6 +288,8 @@ public class LocalizationEditor : EditorWindow
 
     void DeleteKey(string key)
     {
+        if (localizationManager == null) return;
+        
         localizationManager.RemoveKey(key);
         EditorUtility.SetDirty(localizationManager);
         selectedKey = "";
@@ -254,10 +299,17 @@ public class LocalizationEditor : EditorWindow
 
     void DuplicateKey(string key)
     {
+        if (localizationManager == null) return;
+        
         string newKey = key + "_copy";
         string russian = localizationManager.GetRussian(key);
         string english = localizationManager.GetEnglish(key);
-        AddNewKey(newKey, russian, english);
+        
+        localizationManager.SetTranslation(newKey, russian, english);
+        EditorUtility.SetDirty(localizationManager);
+        
+        selectedKey = newKey;
+        LoadSelectedKeyTranslations();
     }
 
     void CreateLocalizationManager()
@@ -265,5 +317,6 @@ public class LocalizationEditor : EditorWindow
         GameObject go = new GameObject("LocalizationManager");
         localizationManager = go.AddComponent<LocalizationManager>();
         DontDestroyOnLoad(go);
+        needsReload = true;
     }
 }
