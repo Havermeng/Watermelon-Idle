@@ -78,11 +78,7 @@ public class SaveSlotsUI : MonoBehaviour
         {
             SaveManager.Instance.CreateNewSave(slot, "Слот " + (slot + 1));
         }
-        
-        if (SceneLoader.Instance != null)
-            SceneLoader.Instance.LoadScene("ArbuzFerma");
-        else
-            SceneManager.LoadScene("ArbuzFerma");
+        SceneManager.LoadScene("ArbuzFerma");
     }
 
     public void OnSlotRename(int slot)

@@ -173,7 +173,7 @@ public class FarmCell : MonoBehaviour
     {
         int harvestValue = GetCurrentHarvestValue();
         gameManager?.AddCoins(harvestValue);
-        HarvestTextPool.Instance?.Show(cellCanvas.transform, harvestValue);
+        ShowFloatingText("+" + harvestValue);
         HarvestEffect.Instance?.Play(transform.position);
         AudioManager.Instance?.PlayWatermelonHarvestSound();
 
@@ -183,6 +183,49 @@ public class FarmCell : MonoBehaviour
         UpdateSprite();
         SaveCell();
         cachedGrowTime = -1f;
+    }
+
+    void ShowFloatingText(string text)
+    {
+        if (cellCanvas == null) return;
+        StartCoroutine(AnimateFloatingText(text));
+    }
+
+    System.Collections.IEnumerator AnimateFloatingText(string text)
+    {
+        if (cellCanvas == null) yield break;
+
+        GameObject go = new GameObject("FloatingText");
+        go.transform.SetParent(cellCanvas.transform, false);
+        RectTransform rt = go.AddComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = new Vector2(200, 50);
+
+        TMPro.TextMeshProUGUI tmp = go.AddComponent<TMPro.TextMeshProUGUI>();
+        tmp.text = text;
+        tmp.fontSize = 48;
+        tmp.color = Color.green;
+        tmp.alignment = TMPro.TextAlignmentOptions.Center;
+        tmp.raycastTarget = false;
+
+        Vector2 startPos = rt.anchoredPosition;
+        Vector2 endPos = startPos + new Vector2(0, 80);
+        float duration = 1f;
+        float elapsed = 0;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            rt.anchoredPosition = Vector2.Lerp(startPos, endPos, t);
+            tmp.color = new Color(0.3f, 0.8f, 0.2f, 1f - t);
+            yield return null;
+        }
+
+        Destroy(go);
     }
 
     int GetCurrentHarvestValue()

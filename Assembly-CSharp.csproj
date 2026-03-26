@@ -51,9 +51,7 @@
     <Analyzer Include="D:\Zombie Kingdom\Watermelon Idle\Library\PackageCache\com.unity.dt.app-ui@8ac7e730dd5d\Runtime\MVVM\SourceGenerators\netstandard2.0\MVVMSourceGenerators.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\Integration\GameReadyBridge.cs" />
     <Compile Include="Assets\Scripts\Menu\SettingsUI.cs" />
-    <Compile Include="Assets\Scripts\Core\SceneLoader.cs" />
     <Compile Include="Assets\Scripts\Ferma\CoinIconFollow.cs" />
     <Compile Include="Assets\Scripts\Menu\ResetSaveButton.cs" />
     <Compile Include="Assets\Scripts\Ferma\HarvestEffect.cs" />
@@ -70,7 +68,6 @@
     <Compile Include="Assets\Scripts\VersionSystem\VersionButton.cs" />
     <Compile Include="Assets\Scripts\Menu\SaveData.cs" />
     <Compile Include="Assets\Scripts\VersionSystem\VersionSystemTest.cs" />
-    <Compile Include="Assets\Scripts\UI\UILayoutFixer.cs" />
     <Compile Include="Assets\Scripts\Ferma\WatermelonUnlockManager.cs" />
     <Compile Include="Assets\Scripts\VersionSystem\VersionPanelUI.cs" />
     <Compile Include="Assets\Scripts\Menu\PauseMenu.cs" />
@@ -78,7 +75,6 @@
     <Compile Include="Assets\Scripts\Audio\AudioManager.cs" />
     <Compile Include="Assets\Scripts\Ferma\ShopManager.cs" />
     <Compile Include="Assets\Scripts\Audio\SceneMusicStarter.cs" />
-    <Compile Include="Assets\Scripts\Ferma\HarvestTextPool.cs" />
     <Compile Include="Assets\Scripts\Language\LocalizedText.cs" />
     <Compile Include="Assets\Scripts\VersionSystem\VersionManager.cs" />
     <Compile Include="Assets\Scripts\Core\Singleton.cs" />
