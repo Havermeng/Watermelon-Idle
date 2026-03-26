@@ -65,6 +65,7 @@
     <Compile Include="Assets\Scripts\Menu\WebGLManager.cs" />
     <Compile Include="Assets\Scripts\Ferma\ShopUI.cs" />
     <Compile Include="Assets\Scripts\Ferma\GameManager.cs" />
+    <Compile Include="Assets\Scripts\Language\LocalizationBootstrap.cs" />
     <Compile Include="Assets\Scripts\VersionSystem\VersionButton.cs" />
     <Compile Include="Assets\Scripts\Menu\SaveData.cs" />
     <Compile Include="Assets\Scripts\VersionSystem\VersionSystemTest.cs" />

@@ -109,6 +109,17 @@ public class LocalizationManager : MonoBehaviour
 
     public string GetCurrentLanguage() => currentLanguage;
 
+    public void SetTranslation(string key, string russian, string english)
+    {
+        if (russianTranslations == null) russianTranslations = new Dictionary<string, string>();
+        if (englishTranslations == null) englishTranslations = new Dictionary<string, string>();
+
+        if (!string.IsNullOrEmpty(russian))
+            russianTranslations[key] = russian;
+        if (!string.IsNullOrEmpty(english))
+            englishTranslations[key] = english;
+    }
+
     public bool HasKey(string key)
     {
         Dictionary<string, string> dict = currentLanguage == "ru" ? russianTranslations : englishTranslations;
